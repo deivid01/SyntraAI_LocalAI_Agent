@@ -1,0 +1,12 @@
+node_modules/
+dist/
+release/
+*.db
+*.log
+.env
+.DS_Store
+*.map
+electron-builder-debug.log
+win-unpacked/
+*.exe
+tmp/
