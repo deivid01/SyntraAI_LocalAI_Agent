@@ -12,7 +12,7 @@ import rag2 from './assets/imgs_lp/5.png';      // Training Mode Injection
 
 const App = () => {
   return (
-    <div className="min-h-screen bg-[#050505] text-white selection:bg-purple-500/30 font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-syntra-dark text-white selection:bg-purple-500/30 font-sans overflow-x-hidden">
       
       {/* Navbar */}
       <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5">
@@ -85,7 +85,7 @@ const App = () => {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="flex flex-col sm:flex-row gap-4"
           >
-            <a href="https://github.com/deivid01/SyntraAI_LocalAI_Agent" target="_blank" rel="noreferrer" className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white px-10 py-4 rounded-full font-bold text-lg transition-all shadow-[0_0_25px_rgba(139,92,246,0.4)] hover:scale-105 flex items-center justify-center gap-2">
+            <a href="https://github.com/deivid01/SyntraAI_LocalAI_Agent" target="_blank" rel="noreferrer" className="bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white px-10 py-4 rounded-full font-bold text-lg transition-all shadow-[0_0_25px_rgba(139,92,246,0.4)] hover:scale-105 flex items-center justify-center gap-2">
               Explore o Repositório
               <Code size={20} />
             </a>
@@ -176,21 +176,21 @@ const App = () => {
                className="space-y-8"
             >
                <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-400 font-bold text-xl">1</div>
+                  <div className="shrink-0 w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-400 font-bold text-xl">1</div>
                   <div>
                     <h4 className="text-xl font-bold mb-2">Ingestão de Dados em Massa</h4>
                     <p className="text-gray-400 font-light">Arraste e solte seus arquivos diretamente no hub de documentos para uma indexação local instantânea.</p>
                   </div>
                </div>
                <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-xl">2</div>
+                  <div className="shrink-0 w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-xl">2</div>
                   <div>
                     <h4 className="text-xl font-bold mb-2">Neural Overview</h4>
                     <p className="text-gray-400 font-light">Visualize em tempo real o status dos vetores, chunks de memória e a atividade do motor RAG.</p>
                   </div>
                </div>
                <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold text-xl">3</div>
+                  <div className="shrink-0 w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold text-xl">3</div>
                   <div>
                     <h4 className="text-xl font-bold mb-2">Treinamento Contextual</h4>
                     <p className="text-gray-400 font-light">Ative ou desative a injeção de memória RAG conforme a necessidade da conversa, otimizando o processamento.</p>
@@ -251,7 +251,7 @@ const App = () => {
             className="lg:w-1/2"
           >
             <div className="glass-card rounded-[32px] p-2 relative group italic">
-              <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 rounded-[34px] blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute -inset-1 bg-linear-to-r from-blue-600/20 to-cyan-600/20 rounded-[34px] blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
               <img src={showcase2} alt="Real-time Logs" className="rounded-[24px] w-full border border-white/5" />
             </div>
           </motion.div>
