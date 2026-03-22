@@ -1,18 +1,20 @@
 {
-  "name": "jarvis-local-ai",
+  "name": "syntra-local-ai",
   "version": "1.0.0",
-  "description": "Assistente pessoal estilo Jarvis - 100% local",
-  "main": "dist/main/main.js",
+  "description": "Assistente pessoal Syntra - 100% local",
+  "main": "dist/infra/main/main.js",
   "scripts": {
-    "dev": "tsc && electron .",
-    "dev:watch": "concurrently \"tsc -w\" \"electron .\"",
-    "build": "tsc && electron-builder",
-    "start:ai": "ollama run mistral",
+    "dev": "concurrently \"tsc -w\" \"npm run tailwind:watch\" \"electron .\"",
+    "tailwind:watch": "tailwindcss -i ./src/ui/styles/tailwind.css -o ./dist/ui/styles/output.css --watch",
+    "tailwind:build": "tailwindcss -i ./src/ui/styles/tailwind.css -o ./dist/ui/styles/output.css",
+    "build:ui": "powershell -Command \"if (!(Test-Path dist/ui/styles)) { New-Item -ItemType Directory -Path dist/ui/styles -Force }; Copy-Item -Path src/ui/index.html -Destination dist/ui/index.html -Force\"",
+    "build": "npm run build:ui && npm run tailwind:build && tsc && electron-builder",
+    "start:ai": "ollama run llama3",
     "install:deps": "powershell -ExecutionPolicy Bypass -File install.ps1",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [
-    "jarvis",
+    "syntra",
     "ai",
     "electron",
     "local",
@@ -21,49 +23,47 @@
   "author": "Wellington Luiz",
   "license": "MIT",
   "devDependencies": {
+    "@tailwindcss/cli": "^4.2.2",
     "@types/node": "^20.11.5",
+    "autoprefixer": "^10.4.27",
     "concurrently": "^8.2.2",
     "electron": "^28.2.0",
     "electron-builder": "^24.9.1",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.2",
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "@nut-tree-fork/nut-js": "^4.2.6",
     "axios": "^1.6.7",
     "dotenv": "^16.4.1",
+    "pdf-parse": "^2.4.5",
     "sql.js": "^1.10.3",
     "wav": "^1.0.2"
   },
   "build": {
-    "extends": null,
-    "appId": "com.jarvis.localai",
-    "productName": "JarvisAI",
+    "appId": "com.syntra.ai",
+    "productName": "SyntraAI",
+    "copyright": "Copyright (c) 2026 Deivid Peres",
     "directories": {
       "output": "release"
     },
     "win": {
-      "target": "nsis",
+      "target": [
+        "dir"
+      ],
       "icon": "assets/icon.ico"
-    },
-    "nsis": {
-      "oneClick": true,
-      "perMachine": true,
-      "allowToChangeInstallationDirectory": false,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "JarvisAI",
-      "installerIcon": "assets/icon.ico",
-      "uninstallerIcon": "assets/icon.ico",
-      "runAfterFinish": true
     },
     "files": [
       "dist/**/*",
-      "src/renderer/**/*",
-      "src/database/schema.sql",
+      "src/ui/**/*",
       "assets/**/*",
       "node_modules/**/*",
-      "package.json",
-      "install.ps1",
-      ".env"
+      "package.json"
+    ],
+    "extraResources": [
+      ".env",
+      "install.ps1"
     ]
   }
 }

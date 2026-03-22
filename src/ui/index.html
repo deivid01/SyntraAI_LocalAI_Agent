@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Syntra AI — Local Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/output.css" />
+</head>
+<body class="bg-zinc-950 text-zinc-100 font-sans selection:bg-violet-500/30">
+
+  <!-- Custom Titlebar (Electron Frameless) -->
+  <div id="titlebar" class="h-8 flex items-center justify-between bg-black/40 backdrop-blur-md border-b border-white/5 fixed top-0 left-0 right-0 z-50">
+    <div id="titlebar-drag" class="flex-1 h-full flex items-center px-4 gap-2">
+      <span class="text-violet-500 font-bold text-lg leading-none">◈</span>
+      <span class="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase">Syntra AI — Local Intelligence</span>
+    </div>
+    <div id="titlebar-controls" class="flex items-center h-full">
+      <button id="btn-minimize" class="w-10 h-full hover:bg-white/5 flex items-center justify-center transition-colors text-zinc-400">⎯</button>
+      <button id="btn-maximize" class="w-10 h-full hover:bg-white/5 flex items-center justify-center transition-colors text-zinc-400">□</button>
+      <button id="btn-close" class="w-10 h-full hover:bg-red-500/80 flex items-center justify-center transition-colors text-zinc-400 hover:text-white">✕</button>
+    </div>
+  </div>
+
+  <!-- Main Application Wrapper -->
+  <div id="app" class="flex h-screen pt-8 overflow-hidden">
+    
+    <!-- Sidebar (Modern SaaS Navigation) -->
+    <aside id="sidebar" class="w-20 hover:w-64 flex flex-col items-center py-6 bg-zinc-900/50 border-r border-white/5 transition-all duration-300 group z-30">
+      <div class="mb-10 flex items-center gap-4 px-6 w-full overflow-hidden">
+        <div class="w-8 h-8 rounded-lg bg-linear-to-br from-violet-600 to-blue-600 flex items-center justify-center shadow-lg shadow-violet-600/20 shrink-0">
+          <span class="text-white font-bold">S</span>
+        </div>
+        <span class="font-bold text-lg tracking-tight opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Syntra AI</span>
+      </div>
+
+      <nav class="flex-1 w-full px-3 space-y-2">
+        <button class="sidebar-item active w-full flex items-center gap-4 p-3 rounded-xl bg-violet-600/10 text-violet-400 transition-all">
+          <span class="w-6 text-center">🏠</span>
+          <span class="opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-medium">Dashboard</span>
+        </button>
+        <button id="synapse-access-btn" class="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white transition-all">
+          <span class="w-6 text-center">🧠</span>
+          <span class="opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-medium tracking-tight">Synapse Access</span>
+        </button>
+        <button id="btn-setup" class="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white transition-all">
+          <span class="w-6 text-center">⚙️</span>
+          <span class="opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-medium">Instalação</span>
+        </button>
+      </nav>
+
+      <div class="w-full px-3 mt-auto pb-4">
+        <div class="px-3 py-2 border-t border-white/5 space-y-1">
+          <p class="text-[8px] font-bold text-zinc-600 uppercase tracking-widest">© 2026 SYNTRA AI</p>
+          <p class="text-[8px] text-zinc-500">Desenvolvido por <a href="https://github.com/deivid01" class="hover:text-violet-400 decoration-violet-500/30">Deivid Peres</a></p>
+        </div>
+        <button id="btn-clear-history" class="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-red-500/10 text-zinc-500 hover:text-red-400 transition-all">
+          <span class="w-6 text-center">🗑️</span>
+          <span class="opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-medium text-xs uppercase tracking-widest">Wipe Data</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Content Area -->
+    <div class="flex-1 flex flex-col relative overflow-hidden">
+      
+      <!-- Topbar -->
+      <header class="h-16 flex items-center justify-between px-8 bg-zinc-950/20 backdrop-blur-sm border-b border-white/5">
+        <div class="flex items-center gap-4">
+          <div id="status-indicator" class="flex items-center gap-2 bg-zinc-900/50 px-3 py-1.5 rounded-full border border-white/5 transition-all">
+            <span id="status-dot" class="w-2 h-2 rounded-full bg-zinc-500 animate-pulse"></span>
+            <span id="status-label" class="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Standby</span>
+          </div>
+          <div id="dep-status" class="flex gap-2">
+            <span id="dep-ollama" class="text-[9px] font-bold px-2 py-0.5 rounded-md border border-red-500/30 text-red-400/70 uppercase">LLM</span>
+            <span id="dep-whisper" class="text-[9px] font-bold px-2 py-0.5 rounded-md border border-red-500/30 text-red-400/70 uppercase">STT</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-6">
+          <div class="flex flex-col items-end">
+            <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-tighter">System Mode</span>
+            <span id="info-mode" class="text-xs font-semibold text-violet-400">AUTONOMOUS</span>
+          </div>
+          <div class="w-px h-8 bg-white/5"></div>
+          <div class="flex items-center gap-3">
+            <div class="text-right">
+              <div class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Amplitude</div>
+              <div id="info-amplitude" class="text-xs font-mono text-zinc-300">0.000</div>
+            </div>
+            <div class="w-24 h-1.5 bg-zinc-900 rounded-full overflow-hidden border border-white/5">
+              <div id="amplitude-bar" class="h-full bg-linear-to-r from-violet-500 to-cyan-400 transition-all duration-75 w-0"></div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content Container -->
+      <main class="flex-1 flex overflow-hidden relative">
+        
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="absolute inset-0 flex flex-col items-center justify-center z-10 bg-zinc-950/40 backdrop-blur-sm transition-all duration-700">
+          <div class="w-24 h-24 mb-6 rounded-3xl bg-linear-to-br from-violet-600 to-blue-600 flex items-center justify-center shadow-2xl shadow-violet-600/20 animate-pulse">
+            <span class="text-white font-bold text-4xl">S</span>
+          </div>
+          <h2 class="text-3xl font-orbitron font-black text-white mb-2 tracking-tighter">SYNTRA AI</h2>
+          <p class="text-zinc-400 text-sm font-medium tracking-widest uppercase opacity-60">Neural Local Intelligence</p>
+          <div class="mt-8 flex items-center gap-3 px-6 py-3 bg-white/5 rounded-2xl border border-white/5 animate-fade-in">
+             <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></span>
+             <span class="text-[10px] font-bold uppercase tracking-widest text-zinc-300">Ready for Interaction</span>
+          </div>
+        </div>
+
+        <!-- Left: Conversation Feed -->
+        <section class="flex-1 flex flex-col p-8 overflow-hidden">
+          <div id="conversation-area" class="flex-1 overflow-y-auto space-y-6 pr-4 mb-6 custom-scrollbar scroll-smooth">
+            <!-- Templates (Hidden) -->
+            <div id="chat-templates" class="hidden">
+              <div id="transcript-box" class="flex flex-col items-end gap-2 group">
+                <span class="text-[10px] font-bold text-zinc-500 mr-2 uppercase tracking-widest">You</span>
+                <div class="max-w-[80%] bg-zinc-800/80 backdrop-blur-sm px-6 py-4 rounded-2xl rounded-tr-none border border-white/5 shadow-xl">
+                  <p class="text-zinc-200 leading-relaxed">&nbsp;</p>
+                </div>
+              </div>
+
+              <div id="response-box" class="flex flex-col items-start gap-2 group">
+                <span class="text-[10px] font-bold text-violet-500 ml-2 uppercase tracking-widest">Syntra</span>
+                <div class="max-w-[85%] bg-white/5 backdrop-blur-md px-6 py-4 rounded-2xl rounded-tl-none border border-violet-500/10 shadow-2xl shadow-violet-500/5">
+                  <p class="text-zinc-100 leading-relaxed typing">&nbsp;</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom: Input Area -->
+          <div class="relative group">
+            <div class="absolute -inset-1 bg-linear-to-r from-violet-600/30 to-blue-600/30 rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-500 text-transparent">.</div>
+            <div class="relative flex items-center bg-zinc-900 border border-white/10 rounded-2xl p-2 pl-6 focus-within:border-violet-500/50 transition-all shadow-2xl">
+              <input
+                id="text-input"
+                type="text"
+                placeholder="Ask Syntra anything or speak..."
+                class="flex-1 bg-transparent border-none outline-none text-zinc-100 placeholder:text-zinc-600 py-3"
+                autocomplete="off"
+              />
+              <button id="btn-mic" class="ml-2 w-10 h-10 flex items-center justify-center rounded-xl transition-all active:scale-90 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white border border-white/5" title="Push-to-Talk">
+                <span id="mic-icon">🎙️</span>
+              </button>
+              <button id="btn-send" class="ml-2 bg-violet-600 hover:bg-violet-500 text-white w-10 h-10 flex items-center justify-center rounded-xl transition-all active:scale-90 shadow-lg shadow-violet-600/20">
+                <span>➤</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Right: HUD & Logs Sidebar -->
+        <aside class="w-80 border-l border-white/5 bg-zinc-900/10 backdrop-blur-sm p-6 flex flex-col gap-6 overflow-hidden">
+          <!-- Visual HUD Circular -->
+          <div class="relative flex justify-center py-4">
+             <canvas id="hud-canvas" width="220" height="220" class="drop-shadow-[0_0_20px_rgba(139,92,246,0.3)]"></canvas>
+             <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <div id="syntra-eye" class="w-12 h-12 rounded-full bg-violet-500/20 flex items-center justify-center border border-violet-500/40 shadow-[0_0_30px_rgba(139,92,246,0.5)]">
+                  <div class="w-4 h-4 rounded-full bg-violet-400 animate-pulse"></div>
+                </div>
+                <span class="mt-4 font-black tracking-tighter text-zinc-800 select-none">SYNTRA</span>
+             </div>
+          </div>
+
+          <!-- Log Area -->
+          <div class="flex-1 flex flex-col min-h-0">
+             <div class="flex items-center justify-between mb-3">
+               <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Real-time Logs</span>
+               <div class="h-px flex-1 mx-4 bg-white/5"></div>
+               <span class="text-[10px] font-mono text-violet-500/70">v1.2</span>
+             </div>
+             <div id="log-entries" class="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2 font-mono text-[10px] leading-tight"></div>
+          </div>
+
+          <!-- History/Stats -->
+          <div class="space-y-3 pt-4 border-t border-white/5">
+             <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Recent Activity</span>
+             <ul id="recent-commands" class="space-y-1"></ul>
+          </div>
+        </aside>
+      </main>
+
+      <!-- Bottom Audio Visualizer Bar -->
+      <div id="waveform-container" class="h-12 w-full absolute bottom-0 left-0 border-t border-white/5 bg-black/40 backdrop-blur-sm pointer-events-none z-0">
+        <canvas id="waveform-canvas" class="w-full h-full opacity-40"></canvas>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SYNAPSE ACCESS MODAL (Glassmorphism Refactor) -->
+  <div id="synapse-modal" class="fixed inset-0 z-100 items-center justify-center p-8 bg-black/60 backdrop-blur-sm hidden animate-fade-in">
+    <div class="w-full max-w-5xl h-[80vh] bg-zinc-950 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col shadow-violet-900/10">
+      
+      <!-- Modal Header -->
+      <div class="h-20 flex items-center justify-between px-10 border-b border-white/5 bg-zinc-900/30">
+        <div class="flex items-center gap-4">
+          <div class="w-10 h-10 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center">
+            <span class="text-violet-400">🧠</span>
+          </div>
+          <div>
+            <h2 class="font-bold text-xl tracking-tight">Synapse Access</h2>
+            <p class="text-[10px] uppercase tracking-[0.3em] text-zinc-500">Intelligent Data Command Cluster</p>
+          </div>
+        </div>
+        <button id="synapse-close" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/5 text-zinc-500 hover:text-white transition-all">✕</button>
+      </div>
+      
+      <div class="flex-1 flex overflow-hidden">
+        <!-- Modal Sidebar Navigation -->
+        <aside class="w-64 border-r border-white/5 bg-zinc-900/20 flex flex-col p-6 gap-2">
+          <button class="synapse-tab-btn flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-zinc-400 hover:bg-white/5 active" data-tab="dashboard">
+            <span>📊</span> Dashboard
+          </button>
+          <button class="synapse-tab-btn flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-zinc-400 hover:bg-white/5" data-tab="training">
+            <span>🚀</span> Training Mode
+          </button>
+          <button class="synapse-tab-btn flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-zinc-400 hover:bg-white/5" data-tab="data">
+            <span>📂</span> Ingested Data
+          </button>
+          <button class="synapse-tab-btn flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-zinc-400 hover:bg-white/5" data-tab="logs">
+             <span>📜</span> Access Logs
+          </button>
+        </aside>
+        
+        <!-- Modal Main Content Area -->
+        <main class="flex-1 p-10 overflow-y-auto custom-scrollbar bg-linear-to-br from-transparent to-violet-500/2">
+          
+          <!-- DASHBOARD -->
+          <section id="tab-dashboard" class="synapse-tab-content space-y-8 animate-slide-up">
+            <h3 class="text-2xl font-bold tracking-tight">Neural Overview</h3>
+            <div class="grid grid-cols-3 gap-6">
+              <div class="bg-zinc-900/50 p-6 rounded-2xl border border-white/5 shadow-xl">
+                <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Vectorized Files</span>
+                <span id="synapse-stat-files" class="text-4xl font-bold text-white">0</span>
+              </div>
+              <div class="bg-zinc-900/50 p-6 rounded-2xl border border-white/5 shadow-xl">
+                <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Memory Chunks</span>
+                <span id="synapse-stat-chunks" class="text-4xl font-bold text-violet-500">0</span>
+              </div>
+              <div class="bg-zinc-900/50 p-6 rounded-2xl border border-white/5 shadow-xl">
+                <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">RAG Status</span>
+                <span id="synapse-stat-status" class="text-xl font-black uppercase text-red-500 tracking-tighter">OFFLINE</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- TRAINING -->
+          <section id="tab-training" class="synapse-tab-content hidden space-y-8 animate-slide-up">
+            <div class="flex items-center justify-between bg-violet-600/10 p-6 rounded-2xl border border-violet-500/20">
+              <div class="space-y-1">
+                <h3 class="text-xl font-bold text-violet-400">RAG Memory Injection</h3>
+                <p class="text-xs text-zinc-400">When active, AI leverages local document context for responses.</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="synapse-training-toggle" class="sr-only peer">
+                <div class="w-14 h-8 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-violet-600 shadow-inner"></div>
+              </label>
+            </div>
+            
+            <div id="synapse-dropzone" class="h-64 border-2 border-dashed border-zinc-800 rounded-3xl flex flex-col items-center justify-center p-8 bg-zinc-900/10 hover:bg-violet-600/5 hover:border-violet-500/50 transition-all group cursor-pointer">
+              <span class="text-5xl mb-4 group-hover:scale-110 transition-transform">📁</span>
+              <h4 class="font-bold text-lg">Transmit Knowledge Data</h4>
+              <p class="text-sm text-zinc-500 mb-6 text-center max-w-xs">Drop neural data clusters here. Supports .pdf, .txt, .js, .json, .md.</p>
+              <button id="synapse-browse-btn" class="bg-zinc-800 hover:bg-zinc-700 text-white px-6 py-2.5 rounded-xl font-semibold transition-all">Browse Internal Storage</button>
+              <input type="file" id="synapse-file-input" multiple style="display:none;" />
+            </div>
+            
+            <div id="synapse-upload-progress" class="hidden p-6 bg-zinc-900 rounded-2xl border border-white/5">
+              <div class="flex justify-between items-end mb-2">
+                <span class="text-xs font-bold text-zinc-400">Neural Syncing: <span id="synapse-progress-text" class="text-violet-400"></span></span>
+              </div>
+              <div class="w-full h-2 bg-black rounded-full overflow-hidden">
+                <div id="synapse-progress-fill" class="h-full bg-linear-to-r from-violet-600 to-blue-600 transition-all duration-300"></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- DATA -->
+          <section id="tab-data" class="synapse-tab-content hidden space-y-6 animate-slide-up">
+            <h3 class="text-xl font-bold">Vector Vault</h3>
+            <div class="rounded-2xl border border-white/5 overflow-hidden">
+              <table id="synapse-files-table" class="w-full text-left text-sm">
+                <thead>
+                  <tr class="bg-zinc-900/80 text-zinc-500 border-b border-white/5">
+                    <th class="px-6 py-4 font-bold uppercase tracking-widest text-[9px]">Neural Cluster Name</th>
+                    <th class="px-6 py-4 font-bold uppercase tracking-widest text-[9px]">Data Type</th>
+                    <th class="px-6 py-4 font-bold uppercase tracking-widest text-[9px]">Sync Status</th>
+                    <th class="px-4 py-4 font-bold uppercase tracking-widest text-[9px]">Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5 bg-zinc-900/20 text-zinc-300"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- LOGS -->
+          <section id="tab-logs" class="synapse-tab-content hidden space-y-6 animate-slide-up">
+            <h3 class="text-xl font-bold">Propagation Logs</h3>
+            <ul id="synapse-logs-list" class="space-y-2 font-mono text-xs"></ul>
+          </section>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .typing::after { content: '|'; animation: blink 0.7s infinite; }
+    @keyframes blink { 0%, 100% { opacity: 1 } 50% { opacity: 0 } }
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 10px; }
+    .custom-scrollbar-thumb:hover { background: rgba(139,92,246,0.3); }
+    .sidebar-item.active { box-shadow: 0 0 20px rgba(139,92,246,0.1); }
+  </style>
+
+  <!-- Polyfill for CommonJS compilation in browser -->
+  <script>
+    var exports = {};
+    var module = { exports: exports };
+  </script>
+
+  <!-- Scripts (Source) -->
+  <script src="components/HudCircle.js"></script>
+  <script src="components/Waveform.js"></script>
+  <script src="components/StatusIndicator.js"></script>
+  <script src="components/TypingText.js"></script>
+  <script src="components/AudioCapture.js"></script>
+  <script src="scripts/synapseAccess.js"></script>
+  <script src="scripts/visualizer.js"></script>
+  <script src="scripts/uiController.js"></script>
+</body>
+</html>
+

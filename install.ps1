@@ -1,11 +1,11 @@
 # ============================================================
-# JarvisLocalAI - Script de Inicialização de Dependências
+# SyntraLocalAI - Script de Inicialização de Dependências
 # ============================================================
 
 $ErrorActionPreference = "Continue"
 
 Write-Host "============================================" -ForegroundColor Cyan
-Write-Host "  JARVIS AI - Configuração de Sistema" -ForegroundColor Cyan
+Write-Host "  SYNTRA AI - Configuração de Sistema" -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Cyan
 
 function Write-Step($msg) { Write-Host "[>>] $msg" -ForegroundColor Yellow }
@@ -68,6 +68,6 @@ if (!(Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
 
 Write-Host ""
 Write-Host "============================================" -ForegroundColor Cyan
-Write-Host "  SISTEMA PRONTO PARA O JARVIS!" -ForegroundColor Green
+Write-Host "  SISTEMA PRONTO PARA O SYNTRA!" -ForegroundColor Green
 Write-Host "============================================" -ForegroundColor Cyan
 Start-Sleep -Seconds 3

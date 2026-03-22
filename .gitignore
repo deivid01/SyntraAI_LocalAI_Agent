@@ -10,3 +10,9 @@ electron-builder-debug.log
 win-unpacked/
 *.exe
 tmp/
+*.rar
+build*.txt
+test_results.txt
+tsc*.txt
+typecheck_*.txt
+novo_arquivo.txt
