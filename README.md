@@ -1,7 +1,7 @@
 # ◈ Syntra AI — Local Intelligence System
 
 <div align="center">
-  <img src="src/ui/assets/logo.png" alt="Syntra AI Logo" width="160" style="margin-bottom: 20px;">
+  <img src="/assets/syntra_logo.png" alt="Syntra AI Logo" width="160" style="margin-bottom: 20px;">
 
 ![Electron](https://img.shields.io/badge/Electron-47848F?style=for-the-badge\&logo=electron\&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge\&logo=typescript\&logoColor=white)
