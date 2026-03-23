@@ -4,11 +4,13 @@ import { BrainCircuit, Zap, Mic, GlobeLock, Code, Database, Layers, CheckCircle2
 // Import assets directly so Vite handles hashing and base paths correctly for GitHub Pages
 import logo from './assets/logo.png';
 import heroImg from './assets/hero.png';
-import showcase1 from './assets/imgs_lp/1.png'; // Main UI
 import showcase2 from './assets/imgs_lp/2.png'; // Real-time Logs
 import showcase3 from './assets/imgs_lp/3.png'; // Original RAG/File list
-import rag1 from './assets/imgs_lp/4.png';      // Synapse Access Dashboard
-import rag2 from './assets/imgs_lp/5.png';      // Training Mode Injection
+import autopilot1 from './assets/imgs_lp/6.png'; // Autopilot Mission Control
+import autopilot2 from './assets/imgs_lp/7.png'; // Autopilot Status
+import wikipedia_so from './assets/imgs_lp/9.png'; // Robust Fetchers
+import dashboard_v2 from './assets/imgs_lp/11.png'; // Final Dashboard v2.0 Plus
+import progress_live from './assets/imgs_lp/8.png'; // Real-time Progress Bars
 
 const App = () => {
   return (
@@ -26,6 +28,7 @@ const App = () => {
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
             <a href="#features" className="hover:text-white transition-colors">Princípios</a>
             <a href="#showcase" className="hover:text-white transition-colors">Interface</a>
+            <a href="#autopilot" className="hover:text-white transition-colors font-bold text-amber-400">Autopilot v2.0</a>
             <a href="#rag" className="hover:text-white transition-colors">Synapse RAG</a>
           </div>
           <a 
@@ -104,11 +107,58 @@ const App = () => {
             className="glass-card rounded-2xl md:rounded-[40px] p-2 md:p-4 shadow-2xl border border-white/10"
           >
             <img 
-              src={showcase1} 
-              alt="Syntra UI Desktop" 
+              src={dashboard_v2} 
+              alt="Syntra UI v2.0" 
               className="w-full h-auto rounded-xl md:rounded-[32px] object-cover"
             />
           </motion.div>
+        </div>
+      </section>
+
+      {/* Autopilot Section */}
+      <section id="autopilot" className="py-32 px-6 relative overflow-hidden">
+        <div className="absolute top-1/2 right-0 w-[600px] h-[600px] bg-amber-500/10 blur-[150px] rounded-full pointer-events-none" />
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col lg:flex-row items-center gap-16">
+            <div className="lg:w-1/2 space-y-8">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm font-bold">
+                <Zap size={14} />
+                AUTOPILOT LEARNING MODULAR
+              </div>
+              <h2 className="text-4xl md:text-6xl font-bold leading-tight">Sua IA que Aprende Sozinha.</h2>
+              <p className="text-gray-400 text-lg font-light leading-relaxed">
+                A versão 2.0 introduz o **Autopilot Recursivo**. Defina um objetivo de conhecimento e a Syntra AI irá navegar por Wikipedia, Stack Overflow e GitHub para expandir sua base de dados neural automaticamente.
+              </p>
+              <div className="grid grid-cols-1 gap-4">
+                 {[
+                   { title: "Expansão Recursiva", desc: "Define profundidade de busca e extrai conceitos-chave." },
+                   { title: "Fallback Inteligente", desc: "Se uma busca falha, ela divide os termos e tenta novamente." },
+                   { title: "Multi-Source Fusion", desc: "Combina dados de múltiplas APIs em uma única memória." }
+                 ].map((item, i) => (
+                   <div key={i} className="flex gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-amber-500/30 transition-colors">
+                      <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-400 font-bold shrink-0">{i+1}</div>
+                      <div>
+                        <h5 className="font-bold text-white">{item.title}</h5>
+                        <p className="text-sm text-gray-500">{item.desc}</p>
+                      </div>
+                   </div>
+                 ))}
+              </div>
+            </div>
+            <motion.div 
+               initial={{ opacity: 0, x: 40 }}
+               whileInView={{ opacity: 1, x: 0 }}
+               viewport={{ once: true }}
+               className="lg:w-1/2 relative group"
+            >
+               <div className="glass-card rounded-[32px] p-2 relative z-10 overflow-hidden shadow-2xl transition-transform group-hover:scale-[1.02]">
+                 <img src={autopilot1} alt="Autopilot Mission" className="w-full rounded-2xl" />
+               </div>
+               <div className="absolute -bottom-10 -left-10 w-2/3 glass-card rounded-2xl p-1 z-20 shadow-2xl border-white/20 transform -rotate-3 overflow-hidden">
+                 <img src={autopilot2} alt="Autopilot Telemetry" className="w-full rounded-xl" />
+               </div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
@@ -168,7 +218,7 @@ const App = () => {
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
+           <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
             <motion.div 
                initial={{ opacity: 0, x: -30 }}
                whileInView={{ opacity: 1, x: 0 }}
@@ -178,22 +228,22 @@ const App = () => {
                <div className="flex gap-4">
                   <div className="shrink-0 w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-400 font-bold text-xl">1</div>
                   <div>
-                    <h4 className="text-xl font-bold mb-2">Ingestão de Dados em Massa</h4>
-                    <p className="text-gray-400 font-light">Arraste e solte seus arquivos diretamente no hub de documentos para uma indexação local instantânea.</p>
+                    <h4 className="text-xl font-bold mb-2">Visibilidade em Tempo Real</h4>
+                    <p className="text-gray-400 font-light">Acompanhe cada chunk sendo processado com barras de progresso granulares na aba Knowledge Vault.</p>
                   </div>
                </div>
                <div className="flex gap-4">
                   <div className="shrink-0 w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-xl">2</div>
                   <div>
-                    <h4 className="text-xl font-bold mb-2">Neural Overview</h4>
-                    <p className="text-gray-400 font-light">Visualize em tempo real o status dos vetores, chunks de memória e a atividade do motor RAG.</p>
+                    <h4 className="text-xl font-bold mb-2">Busca Robusta Wikipedia</h4>
+                    <p className="text-gray-400 font-light">Estratégia "Search-First" que encontra o conhecimento exato mesmo com buscas aproximadas.</p>
                   </div>
                </div>
                <div className="flex gap-4">
                   <div className="shrink-0 w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold text-xl">3</div>
                   <div>
-                    <h4 className="text-xl font-bold mb-2">Treinamento Contextual</h4>
-                    <p className="text-gray-400 font-light">Ative ou desative a injeção de memória RAG conforme a necessidade da conversa, otimizando o processamento.</p>
+                    <h4 className="text-xl font-bold mb-2">Ingestão Local Universal</h4>
+                    <p className="text-gray-400 font-light">Agora suportando .ts, .py, .js e arquivos de código com processamento via fila de alta performance.</p>
                   </div>
                </div>
             </motion.div>
@@ -204,11 +254,11 @@ const App = () => {
                viewport={{ once: true }}
                className="relative grid grid-cols-1 gap-4"
             >
-              <div className="glass-card rounded-2xl p-1 relative z-10 overflow-hidden shadow-2xl">
-                <img src={rag1} alt="RAG Dashboard" className="w-full rounded-xl" />
+              <div className="glass-card rounded-2xl p-1 relative z-10 overflow-hidden shadow-2xl transition-transform hover:scale-[1.02]">
+                <img src={progress_live} alt="RAG Progress" className="w-full rounded-xl" />
               </div>
-              <div className="glass-card rounded-2xl p-1 absolute -bottom-10 -right-10 md:-right-20 w-3/4 z-20 shadow-2xl border-white/20 transform rotate-2">
-                <img src={rag2} alt="RAG Training Mode" className="w-full rounded-xl" />
+              <div className="glass-card rounded-2xl p-1 absolute -bottom-10 -right-10 md:-right-20 w-3/4 z-20 shadow-2xl border-white/20 transform rotate-2 overflow-hidden hover:rotate-0 transition-transform">
+                <img src={wikipedia_so} alt="Wikipedia SO results" className="w-full rounded-xl" />
               </div>
             </motion.div>
           </div>

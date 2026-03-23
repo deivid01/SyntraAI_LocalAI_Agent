@@ -89,6 +89,7 @@ export interface ISynapseRepository {
   getFiles(): Promise<ISynapseFile[]>;
   getProcessedChunks(): Promise<any[]>;
   getChunksForFile(file_id: string): Promise<ISynapseChunk[]>;
+  deleteFile(id: string): Promise<void>;
   logEvent(event: string, message: string): Promise<void>;
   getLogs(): Promise<ISynapseLog[]>;
   getStats(): Promise<{ total_files: number; total_chunks: number; training_active: boolean }>;

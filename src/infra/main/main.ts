@@ -1,6 +1,22 @@
 import { app } from 'electron';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
+
+// Polyfill for File/Blob in Electron Main process (required for some Node modules like undici)
+if (typeof File === 'undefined') {
+  const { Blob } = require('buffer');
+  class File extends Blob {
+    readonly name: string;
+    readonly lastModified: number;
+    constructor(chunks: any[], name: string, options?: any) {
+      super(chunks, options);
+      this.name = name;
+      this.lastModified = options?.lastModified || Date.now();
+    }
+  }
+  (global as any).File = File;
+}
+
 import { appController } from '../controllers/AppController';
 import logger from '../../core/logger';
 

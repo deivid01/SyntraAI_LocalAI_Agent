@@ -4,8 +4,11 @@ import logger from '../core/logger';
 import { ragService } from './ragService';
 import * as crypto from 'crypto';
 import { SynapseRepository } from '../database/repositories/SynapseRepository';
+import { SynapseSourceRepository, ISynapseSource } from '../database/repositories/SynapseSourceRepository';
 import { ISynapseFile, ISynapseChunk } from '../core/types';
 import { ensureDOMMatrix } from '../core/envGuard';
+import { synapseMissionManager } from './SynapseMissionManager';
+import { ragIngestionEngine } from './ragIngestionEngine';
 
 // Apply polyfill before requiring browser-dependent libraries
 ensureDOMMatrix();
@@ -15,6 +18,7 @@ const pdfParse = require('pdf-parse');
 export class SynapseService {
   private static instance: SynapseService;
   private synapseRepo = new SynapseRepository();
+  private sourceRepo = new SynapseSourceRepository();
 
   private constructor() {}
 
@@ -25,71 +29,20 @@ export class SynapseService {
     return SynapseService.instance;
   }
 
-  public async processFile(filePath: string, originalName: string): Promise<void> {
+  public async processFile(filePath: string, originalName: string): Promise<string> {
     const ext = path.extname(originalName).toLowerCase();
-    const allowed = ['.pdf', '.txt', '.md', '.json', '.js', '.ts', '.html', '.css'];
-
-    if (!allowed.includes(ext)) {
-      throw new Error(`Tipo de arquivo não suportado: ${ext}`);
-    }
-
-    const stat = fs.statSync(filePath);
-    const fileId = crypto.randomUUID();
-
-    const file: ISynapseFile = {
-      id: fileId,
-      name: originalName,
-      type: ext,
-      size: stat.size,
-      status: 'processing'
+    const typeMap: Record<string, any> = {
+      '.pdf': 'pdf',
+      '.txt': 'web', // We'll treat txt/md as generic web-style text in ingestion engine for now
+      '.md': 'web',
+      '.html': 'web',
+      '.js': 'web',
+      '.ts': 'web',
+      '.css': 'web'
     };
 
-    await this.synapseRepo.saveFile(file);
-    await this.synapseRepo.logEvent('processing_started', `Iniciando extração do arquivo: ${originalName}`);
-
-    try {
-      let rawText = '';
-      if (ext === '.pdf') {
-        const dataBuffer = fs.readFileSync(filePath);
-        const data = await pdfParse(dataBuffer);
-        rawText = data.text;
-      } else {
-        rawText = fs.readFileSync(filePath, 'utf-8');
-      }
-
-      const cleanText = this.normalizeText(rawText);
-      if (!cleanText) throw new Error('O arquivo parece estar vazio ou não contém texto legível.');
-
-      const chunks = this.chunkText(cleanText, 1000, 200);
-
-      let chunkIndex = 0;
-      for (const content of chunks) {
-        const finalChunkContent = (['.js', '.ts', '.html', '.css'].includes(ext)) 
-          ? `[CÓDIGO FONTE ${ext}]\n${content}` 
-          : content;
-
-        const embedding = await ragService.generateEmbedding(finalChunkContent);
-        
-        const chunk: ISynapseChunk = {
-          id: crypto.randomUUID(),
-          file_id: fileId,
-          chunk_index: chunkIndex,
-          content: finalChunkContent,
-          embedding_json: JSON.stringify(embedding)
-        };
-
-        await this.synapseRepo.saveChunk(chunk);
-        chunkIndex++;
-      }
-
-      await this.synapseRepo.updateFileStatus(fileId, 'processed');
-      await this.synapseRepo.logEvent('processing_completed', `Sucesso ao processar arquivo: ${originalName} (${chunks.length} chunks)`);
-
-    } catch (err: any) {
-      await this.synapseRepo.updateFileStatus(fileId, 'error');
-      await this.synapseRepo.logEvent('processing_error', `Falha ao processar arquivo ${originalName}: ${err.message}`);
-      throw err;
-    }
+    const type = typeMap[ext] || 'web';
+    return await ragIngestionEngine.ingestSource(type, filePath, { filename: originalName });
   }
 
   private normalizeText(text: string): string {
@@ -122,6 +75,34 @@ export class SynapseService {
 
   public async getLogs() {
     return await this.synapseRepo.getLogs();
+  }
+
+  // Source Management
+  public async getSources() {
+    return await this.sourceRepo.getSources();
+  }
+
+  public async addSource(source: ISynapseSource) {
+    await this.sourceRepo.addSource(source);
+    await this.synapseRepo.logEvent('source_added', `Nova fonte registrada: ${source.source} (${source.type})`);
+  }
+
+  public async removeSource(id: string) {
+    await this.sourceRepo.removeSource(id);
+    await this.synapseRepo.logEvent('source_removed', `Fonte removida: ${id}`);
+  }
+
+  // Missions
+  public async startLearningMission(type: string, query: string, name: string, config?: { maxDepth?: number, maxResults?: number, sources?: string[] }) {
+    return await synapseMissionManager.startMission(type, query, name, config);
+  }
+
+  public async syncAllSources() {
+    const sources = await this.sourceRepo.getSources();
+    for (const source of sources) {
+        await ragIngestionEngine.ingestSource(source.type as any, source.source, source.options);
+        await this.sourceRepo.updateLastSync(source.id);
+    }
   }
 }
 

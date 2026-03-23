@@ -1,24 +1,33 @@
 import { ipcMain, IpcMainEvent, BrowserWindow } from 'electron';
-import logger from '../../core/logger';
 import { memoryService } from '../../modules/memoryService';
 import { synapseService } from '../../ai/synapseService';
-import { speak } from '../../ai/ttsService'; // Refactor to TTS Service class later if needed
-import { llmService } from '../../ai/llmService';
 import { ragService } from '../../ai/ragService';
-import { parseIntent } from '../../core/intentParser';
-import fastPathRouter from '../../core/fastPathRouter';
-import { executeIntent } from '../../automation/commandExecutor';
 import hotwordService from '../../modules/audio/hotwordService';
 import clapDetector from '../../modules/audio/clapDetector';
 import voiceListener from '../../modules/audio/voiceListener';
+import { ragQueue } from '../../ai/ragQueue';
+import { ragIngestionEngine } from '../../ai/ragIngestionEngine';
+import { SynapseRepository } from '../../database/repositories/SynapseRepository';
+import { synapseMissionManager } from '../../ai/SynapseMissionManager';
 
 import { appController } from './AppController';
 
 export class IpcController {
   private window: BrowserWindow;
+  private synapseRepo = new SynapseRepository();
 
   constructor(window: BrowserWindow) {
     this.window = window;
+    this.setupEventListeners();
+  }
+
+  private setupEventListeners(): void {
+    synapseMissionManager.on('mission-log', (data) => {
+      this.sendToRenderer('mission-log', data);
+    });
+    synapseMissionManager.on('mission-status', (status) => {
+      this.sendToRenderer('mission-status', status);
+    });
   }
 
   public setupHandlers(): void {
@@ -56,6 +65,39 @@ export class IpcController {
     ipcMain.handle('synapse-upload-file', async (_event, filePath: string, originalName: string) => {
       await synapseService.processFile(filePath, originalName);
     });
+    ipcMain.handle('synapse-ingest-source', async (_event, type: any, source: string, options?: any) => {
+      return await ragIngestionEngine.ingestSource(type, source, options);
+    });
+
+    ipcMain.handle('synapse-get-jobs', async () => ragQueue.getAllJobs());
+    
+    ipcMain.handle('synapse-cancel-job', async (_event, id: string) => {
+        // Simple status update for now, engine would need to check this
+        ragQueue.updateJobStatus(id, { status: 'failed', error: 'Cancelado pelo usuário' });
+    });
+
+    ipcMain.handle('synapse-delete-file', async (_event, id: string) => {
+        // Need to implement delete in repo
+        await this.synapseRepo.deleteFile(id);
+    });
+
+    ipcMain.handle('synapse-search', async (_event, query: string) => {
+        return await ragService.semanticSearch(query, 5);
+    });
+
+    ipcMain.handle('synapse-get-chunks', async (_event, fileId: string) => {
+        return await this.synapseRepo.getChunksForFile(fileId);
+    });
+
+    // New Mission & Source Handlers
+    ipcMain.handle('synapse-get-sources', async () => await synapseService.getSources());
+    ipcMain.handle('synapse-add-source', async (_event, source: any) => await synapseService.addSource(source));
+    ipcMain.handle('synapse-remove-source', async (_event, id: string) => await synapseService.removeSource(id));
+    ipcMain.handle('synapse-start-mission', async (_event, type: string, query: string, name: string, config?: any) => {
+        return await synapseService.startLearningMission(type, query, name, config);
+    });
+    ipcMain.handle('synapse-get-missions', async () => synapseMissionManager.getMissions());
+    ipcMain.handle('synapse-sync-all', async () => await synapseService.syncAllSources());
 
     // Audio / Interaction logic
     ipcMain.on('audio-amplitude', (_event, amp: number) => {

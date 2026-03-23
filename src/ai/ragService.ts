@@ -32,7 +32,7 @@ export class RagService implements IRagService {
   public async generateEmbedding(text: string): Promise<number[]> {
     try {
       const response = await axios.post(`${config.ollamaUrl}/api/embeddings`, {
-        model: config.ollamaModel,
+        model: 'nomic-embed-text',
         prompt: text
       });
 
@@ -66,7 +66,7 @@ export class RagService implements IRagService {
   public async semanticSearch(query: string, topK: number = 3): Promise<RetrievalResult[]> {
     try {
       const isTrainingOn = await this.synapseRepo.getSetting('training_mode_active');
-      if (isTrainingOn !== 'true') return [];
+      if (isTrainingOn === 'false') return [];
 
       const queryEmbedding = await this.generateEmbedding(query);
       const rows = await this.synapseRepo.getProcessedChunks();

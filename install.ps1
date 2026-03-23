@@ -5,7 +5,7 @@
 $ErrorActionPreference = "Continue"
 
 Write-Host "============================================" -ForegroundColor Cyan
-Write-Host "  SYNTRA AI - Configuração de Sistema" -ForegroundColor Cyan
+Write-Host "  SYNTRA AI v2.0 - Configuração de Sistema" -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Cyan
 
 function Write-Step($msg) { Write-Host "[>>] $msg" -ForegroundColor Yellow }
@@ -44,12 +44,13 @@ if (Get-Command ollama -ErrorAction SilentlyContinue) {
     Write-OK "Ollama instalado."
 }
 
-# ---- 4. Baixar Modelo ----
-Write-Step "Garantindo modelo Mistral (pode demorar)..."
+# ---- 4. Baixar Modelos ----
+Write-Step "Garantindo modelos llama3 e phi3 (pode demorar)..."
 # Inicia o serviço se não estiver rodando
 Start-Process "ollama" "serve" -WindowStyle Hidden -ErrorAction SilentlyContinue
 Start-Sleep -Seconds 5
-ollama pull mistral
+ollama pull llama3
+ollama pull phi3
 
 # ---- 5. Verificar Whisper (STT) ----
 Write-Step "Verificando Whisper (OpenAI)..."

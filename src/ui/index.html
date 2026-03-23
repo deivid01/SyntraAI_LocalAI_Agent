@@ -186,7 +186,6 @@
         </aside>
       </main>
 
-      <!-- Bottom Audio Visualizer Bar -->
       <div id="waveform-container" class="h-12 w-full absolute bottom-0 left-0 border-t border-white/5 bg-black/40 backdrop-blur-sm pointer-events-none z-0">
         <canvas id="waveform-canvas" class="w-full h-full opacity-40"></canvas>
       </div>
@@ -196,116 +195,10 @@
 
   <!-- SYNAPSE ACCESS MODAL (Glassmorphism Refactor) -->
   <div id="synapse-modal" class="fixed inset-0 z-100 items-center justify-center p-8 bg-black/60 backdrop-blur-sm hidden animate-fade-in">
-    <div class="w-full max-w-5xl h-[80vh] bg-zinc-950 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col shadow-violet-900/10">
-      
-      <!-- Modal Header -->
-      <div class="h-20 flex items-center justify-between px-10 border-b border-white/5 bg-zinc-900/30">
-        <div class="flex items-center gap-4">
-          <div class="w-10 h-10 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center">
-            <span class="text-violet-400">🧠</span>
-          </div>
-          <div>
-            <h2 class="font-bold text-xl tracking-tight">Synapse Access</h2>
-            <p class="text-[10px] uppercase tracking-[0.3em] text-zinc-500">Intelligent Data Command Cluster</p>
-          </div>
-        </div>
-        <button id="synapse-close" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/5 text-zinc-500 hover:text-white transition-all">✕</button>
-      </div>
-      
-      <div class="flex-1 flex overflow-hidden">
-        <!-- Modal Sidebar Navigation -->
-        <aside class="w-64 border-r border-white/5 bg-zinc-900/20 flex flex-col p-6 gap-2">
-          <button class="synapse-tab-btn flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-zinc-400 hover:bg-white/5 active" data-tab="dashboard">
-            <span>📊</span> Dashboard
-          </button>
-          <button class="synapse-tab-btn flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-zinc-400 hover:bg-white/5" data-tab="training">
-            <span>🚀</span> Training Mode
-          </button>
-          <button class="synapse-tab-btn flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-zinc-400 hover:bg-white/5" data-tab="data">
-            <span>📂</span> Ingested Data
-          </button>
-          <button class="synapse-tab-btn flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-zinc-400 hover:bg-white/5" data-tab="logs">
-             <span>📜</span> Access Logs
-          </button>
-        </aside>
-        
-        <!-- Modal Main Content Area -->
-        <main class="flex-1 p-10 overflow-y-auto custom-scrollbar bg-linear-to-br from-transparent to-violet-500/2">
-          
-          <!-- DASHBOARD -->
-          <section id="tab-dashboard" class="synapse-tab-content space-y-8 animate-slide-up">
-            <h3 class="text-2xl font-bold tracking-tight">Neural Overview</h3>
-            <div class="grid grid-cols-3 gap-6">
-              <div class="bg-zinc-900/50 p-6 rounded-2xl border border-white/5 shadow-xl">
-                <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Vectorized Files</span>
-                <span id="synapse-stat-files" class="text-4xl font-bold text-white">0</span>
-              </div>
-              <div class="bg-zinc-900/50 p-6 rounded-2xl border border-white/5 shadow-xl">
-                <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Memory Chunks</span>
-                <span id="synapse-stat-chunks" class="text-4xl font-bold text-violet-500">0</span>
-              </div>
-              <div class="bg-zinc-900/50 p-6 rounded-2xl border border-white/5 shadow-xl">
-                <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">RAG Status</span>
-                <span id="synapse-stat-status" class="text-xl font-black uppercase text-red-500 tracking-tighter">OFFLINE</span>
-              </div>
-            </div>
-          </section>
-
-          <!-- TRAINING -->
-          <section id="tab-training" class="synapse-tab-content hidden space-y-8 animate-slide-up">
-            <div class="flex items-center justify-between bg-violet-600/10 p-6 rounded-2xl border border-violet-500/20">
-              <div class="space-y-1">
-                <h3 class="text-xl font-bold text-violet-400">RAG Memory Injection</h3>
-                <p class="text-xs text-zinc-400">When active, AI leverages local document context for responses.</p>
-              </div>
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" id="synapse-training-toggle" class="sr-only peer">
-                <div class="w-14 h-8 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-violet-600 shadow-inner"></div>
-              </label>
-            </div>
-            
-            <div id="synapse-dropzone" class="h-64 border-2 border-dashed border-zinc-800 rounded-3xl flex flex-col items-center justify-center p-8 bg-zinc-900/10 hover:bg-violet-600/5 hover:border-violet-500/50 transition-all group cursor-pointer">
-              <span class="text-5xl mb-4 group-hover:scale-110 transition-transform">📁</span>
-              <h4 class="font-bold text-lg">Transmit Knowledge Data</h4>
-              <p class="text-sm text-zinc-500 mb-6 text-center max-w-xs">Drop neural data clusters here. Supports .pdf, .txt, .js, .json, .md.</p>
-              <button id="synapse-browse-btn" class="bg-zinc-800 hover:bg-zinc-700 text-white px-6 py-2.5 rounded-xl font-semibold transition-all">Browse Internal Storage</button>
-              <input type="file" id="synapse-file-input" multiple style="display:none;" />
-            </div>
-            
-            <div id="synapse-upload-progress" class="hidden p-6 bg-zinc-900 rounded-2xl border border-white/5">
-              <div class="flex justify-between items-end mb-2">
-                <span class="text-xs font-bold text-zinc-400">Neural Syncing: <span id="synapse-progress-text" class="text-violet-400"></span></span>
-              </div>
-              <div class="w-full h-2 bg-black rounded-full overflow-hidden">
-                <div id="synapse-progress-fill" class="h-full bg-linear-to-r from-violet-600 to-blue-600 transition-all duration-300"></div>
-              </div>
-            </div>
-          </section>
-
-          <!-- DATA -->
-          <section id="tab-data" class="synapse-tab-content hidden space-y-6 animate-slide-up">
-            <h3 class="text-xl font-bold">Vector Vault</h3>
-            <div class="rounded-2xl border border-white/5 overflow-hidden">
-              <table id="synapse-files-table" class="w-full text-left text-sm">
-                <thead>
-                  <tr class="bg-zinc-900/80 text-zinc-500 border-b border-white/5">
-                    <th class="px-6 py-4 font-bold uppercase tracking-widest text-[9px]">Neural Cluster Name</th>
-                    <th class="px-6 py-4 font-bold uppercase tracking-widest text-[9px]">Data Type</th>
-                    <th class="px-6 py-4 font-bold uppercase tracking-widest text-[9px]">Sync Status</th>
-                    <th class="px-4 py-4 font-bold uppercase tracking-widest text-[9px]">Timestamp</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-white/5 bg-zinc-900/20 text-zinc-300"></tbody>
-              </table>
-            </div>
-          </section>
-
-          <!-- LOGS -->
-          <section id="tab-logs" class="synapse-tab-content hidden space-y-6 animate-slide-up">
-            <h3 class="text-xl font-bold">Propagation Logs</h3>
-            <ul id="synapse-logs-list" class="space-y-2 font-mono text-xs"></ul>
-          </section>
-        </main>
+    <div class="w-full max-w-6xl h-[85vh] bg-zinc-950 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col shadow-violet-900/10 relative">
+      <button id="synapse-close" class="absolute top-6 right-8 z-50 w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/5 text-zinc-500 hover:text-white transition-all">✕</button>
+      <div id="rag-dashboard-root" class="w-full h-full flex flex-col">
+          <!-- React takes over here -->
       </div>
     </div>
   </div>
@@ -332,9 +225,8 @@
   <script src="components/StatusIndicator.js"></script>
   <script src="components/TypingText.js"></script>
   <script src="components/AudioCapture.js"></script>
-  <script src="scripts/synapseAccess.js"></script>
-  <script src="scripts/visualizer.js"></script>
   <script src="scripts/uiController.js"></script>
+  <script src="scripts/rag-dashboard.js"></script>
 </body>
 </html>
 

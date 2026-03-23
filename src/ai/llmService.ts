@@ -82,8 +82,14 @@ export class LlmService {
       'escreva um código', 'write code', 'gere um script', 'generate',
       'compare', 'resuma este documento', 'summarize', 'traduz',
       'refatore', 'refactor', 'debug', 'implementar', 'implement',
+      'automação', 'sequência', 'playlist', 'toque', 'reproduza', 'digite', 'clique', 
+      'escreva', 'pesquise', 'procure', 'visão', 'ocr', 'detectar'
     ];
-    return complexPatterns.some(p => lower.includes(p));
+    
+    // Commands with multiple steps often use these conjunctions
+    const sequenceKeywords = [' e ', ' depois ', ' entao ', ' então ', ' and ', ' then ', ' logo após ', ' em seguida '];
+    
+    return complexPatterns.some(p => lower.includes(p)) || sequenceKeywords.some(k => lower.includes(k));
   }
 
   public parseJSON(raw: string): LLMResponse | null {

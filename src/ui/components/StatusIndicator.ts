@@ -6,17 +6,27 @@ export class StatusIndicator {
   private labelEl: HTMLElement;
 
   private readonly labels: Record<string, string> = {
-    idle:       'STANDBY',
+    starting:   'INICIALIZANDO',
+    idle:       'SYNTRAAI ONLINE',
     listening:  'LISTENING',
     processing: 'THINKING',
     speaking:   'SPEAKING',
   };
 
   private readonly colors: Record<string, string> = {
-    idle:       'bg-zinc-500',
-    listening:  'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]',
+    starting:   'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]',
+    idle:       'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]',
+    listening:  'bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.5)]',
     processing: 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]',
     speaking:   'bg-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.5)]',
+  };
+
+  private readonly textColors: Record<string, string> = {
+    starting:   'text-red-500',
+    idle:       'text-emerald-500',
+    listening:  'text-emerald-400',
+    processing: 'text-amber-500',
+    speaking:   'text-violet-500',
   };
 
   constructor() {
@@ -27,6 +37,7 @@ export class StatusIndicator {
   setState(state: string): void {
     const label = this.labels[state] || state.toUpperCase();
     this.labelEl.textContent = label;
+    this.labelEl.className = `text-[10px] font-black tracking-widest transition-all duration-300 ${this.textColors[state] || 'text-zinc-400'}`;
     
     // Reset and apply dot color
     this.dotEl.className = `w-2 h-2 rounded-full transition-all duration-300 ${this.colors[state] || 'bg-zinc-500'}`;

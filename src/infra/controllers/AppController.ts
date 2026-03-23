@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import { ChildProcess, spawn } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
+import axios from 'axios';
 import logger from '../../core/logger';
 import { config } from '../../core/config';
 import { IpcController } from './IpcController';
@@ -12,6 +13,8 @@ import { ragService } from '../../ai/ragService';
 import { speak, setTTSIpcSender } from '../../ai/ttsService';
 import { parseIntent } from '../../core/intentParser';
 import { executeIntent } from '../../automation/commandExecutor';
+import { learningService } from '../../automation/learningService';
+import { ragQueue } from '../../ai/ragQueue';
 import fastPathRouter from '../../core/fastPathRouter';
 import voiceListener from '../../modules/audio/voiceListener';
 import hotwordService from '../../modules/audio/hotwordService';
@@ -70,7 +73,7 @@ export class AppController {
 
         if (ollamaOnline) {
             this.ipcController?.sendToRenderer('status-text', 'Garantindo Modelos...');
-            await llmService.ensureModels(['phi3', 'llama3']);
+            await llmService.ensureModels(['phi3', 'llama3', 'nomic-embed-text']);
         } else {
             this.ipcController?.sendToRenderer('log', { level: 'error', message: 'Ollama não iniciou. Verifique se ele está instalado.', context: 'System' });
         }
@@ -80,6 +83,13 @@ export class AppController {
         if (!whisperOk) {
             this.ipcController?.sendToRenderer('log', { level: 'warn', message: 'Whisper/Python não encontrados. Clique no ícone de engrenagem para instalar.', context: 'System' });
         }
+
+        await learningService.init();
+        await learningService.init();
+
+        ragQueue.on('job-updated', (job) => {
+            this.ipcController?.sendToRenderer('rag-job-update', job);
+        });
 
         await this.checkDependencies();
         this.updateState('idle');
@@ -114,21 +124,31 @@ export class AppController {
 
   private spawnOllama(): void {
     try {
-      logger.info('AppController', '🟢 Iniciando motor Ollama...');
-      const localAppData = process.env.LOCALAPPDATA || '';
-      const ollamaPath = path.join(localAppData, 'Programs', 'Ollama', 'ollama.exe');
-      const command = fs.existsSync(ollamaPath) ? ollamaPath : 'ollama';
+      logger.info('AppController', '🟢 Verificando motor Ollama...');
+      
+      // Check if Ollama is already running on port 11434
+      axios.get('http://127.0.0.1:11434/api/tags').then(() => {
+        logger.info('AppController', '✅ Ollama já está em execução (instância externa ou prévia).');
+      }).catch(() => {
+        logger.info('AppController', '🚀 Iniciando nova instância do Ollama...');
+        const localAppData = process.env.LOCALAPPDATA || '';
+        const ollamaPath = path.join(localAppData, 'Programs', 'Ollama', 'ollama.exe');
+        const command = fs.existsSync(ollamaPath) ? ollamaPath : 'ollama';
 
-      this.ollamaProcess = spawn(command, ['serve'], {
-        detached: false, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe']
+        this.ollamaProcess = spawn(command, ['serve'], {
+            detached: false, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe']
+        });
+
+        this.ollamaProcess.stderr?.on('data', (data: Buffer) => {
+            const msg = data.toString().trim();
+            // Silence "bind" error as we just checked it, but log others
+            if (msg.toLowerCase().includes('error') && !msg.includes('bind')) {
+                logger.error('Ollama', msg);
+            }
+        });
       });
 
-      this.ollamaProcess.stderr?.on('data', (data: Buffer) => {
-        const msg = data.toString().trim();
-        if (msg.toLowerCase().includes('error')) logger.error('Ollama', msg);
-      });
-
-      // Kill Ollama when app closes
+      // Kill Ollama when app closes (only if we spawned it)
       app.on('before-quit', () => {
         this.killOllama();
       });
@@ -207,9 +227,10 @@ export class AppController {
 
     let intent = fastPathRouter.tryFastPath(text);
     if (!intent) {
+      this.ipcController?.sendToRenderer('log', { level: 'info', message: `Processando comando: "${text}"`, context: 'LLM' });
       try {
         const { response: llmRes, model: usedModel } = await llmService.smartQuery(text);
-        this.ipcController?.sendToRenderer('log', { level: 'info', message: `Modelo usado: ${usedModel}`, context: 'LLM' });
+        this.ipcController?.sendToRenderer('log', { level: 'info', message: `Modelo usado: ${usedModel}. Resposta bruta: ${llmRes.substring(0, 100)}...`, context: 'LLM' });
         const parsed = llmService.parseJSON(llmRes);
         intent = parseIntent(parsed || { intent: 'chat', response: llmRes }, text);
         fastPathRouter.cacheIntent(text, intent);

@@ -89,42 +89,52 @@ async function typeMessage(text: string): Promise<void> {
 const logEntries = document.getElementById('log-entries')!;
 const MAX_LOG_ENTRIES = 100;
 
-function addLog(level: string, message: string, context?: string): void {
+export function addLog(level: 'info' | 'success' | 'warn' | 'error', message: string, context?: string) {
+  const container = document.getElementById('log-entries');
+  if (!container) return;
+  
   const entry = document.createElement('div');
-  const levelColors: Record<string, string> = {
-    info: 'text-zinc-400',
-    warn: 'text-amber-400',
-    error: 'text-red-400 font-bold',
-    success: 'text-emerald-400'
-  };
+  entry.className = `log-entry opacity-0 border-l-2 pl-3 py-1 transition-all duration-300 ${
+    level === 'error' ? 'border-red-500 bg-red-500/5 text-red-200' :
+    level === 'success' ? 'border-emerald-500 bg-emerald-500/5 text-emerald-200' :
+    level === 'warn' ? 'border-amber-500 bg-amber-500/5 text-amber-200' :
+    'border-zinc-700 bg-white/5 text-zinc-400'
+  }`;
   
-  entry.className = `py-1 border-b border-white/[0.02] ${levelColors[level] || 'text-zinc-500'}`;
-  const time = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const ctx = context ? `<span class="opacity-40">[${context}]</span> ` : '';
-  entry.innerHTML = `<span class="opacity-20 mr-2">${time}</span> ${ctx}${message}`;
+  const time = new Date().toLocaleTimeString('pt-BR', { hour12: false });
+  entry.innerHTML = `
+    <div class="flex justify-between items-start mb-0.5">
+      <span class="text-[8px] font-bold opacity-40">${time}</span>
+      ${context ? `<span class="text-[8px] font-black uppercase text-violet-500/50 px-1.5 py-0.5 rounded-sm bg-violet-500/5">${context}</span>` : ''}
+    </div>
+    <div class="text-[10px] leading-snug">${message}</div>
+  `;
   
-  if (logEntries) {
-    logEntries.appendChild(entry);
-    while (logEntries.children.length > MAX_LOG_ENTRIES) {
-      logEntries.removeChild(logEntries.firstChild!);
-    }
-    logEntries.scrollTop = logEntries.scrollHeight;
-  }
-  console.log(`[UI LOG] [${level}] ${context ? `(${context}) ` : ''}${message}`);
+  container.prepend(entry);
+  setTimeout(() => entry.classList.remove('opacity-0', 'translate-x-4'), 10);
+  
+  // Keep only last 50
+  if (container.children.length > 50) container.lastChild?.remove();
 }
 
+// Expose to window for React to use
+(window as any).addLog = addLog;
+
 // ---- State management ----
-let currentState: 'idle' | 'listening' | 'processing' | 'speaking' = 'idle';
+let currentState: 'starting' | 'idle' | 'listening' | 'processing' | 'speaking' = 'idle';
 const recentCommandsList = document.getElementById('recent-commands')!;
 const amplitudeValueEl = document.getElementById('info-amplitude')!;
 const amplitudeBarEl = document.getElementById('amplitude-bar')!;
 
-function setState(state: 'idle' | 'listening' | 'processing' | 'speaking'): void {
+function setState(state: 'starting' | 'idle' | 'listening' | 'processing' | 'speaking'): void {
   currentState = state;
-  if (hud) hud.setState(state);
+  if (hud) hud.setState(state === 'starting' ? 'idle' : state);
   if (statusIndicator) statusIndicator.setState(state);
-  addLog('info', `State changed to: ${state}`, 'System');
+  addLog('info', `Estado alterado: ${state}`, 'System');
 }
+
+// Set initial Red state
+if (statusIndicator) statusIndicator.setState('starting');
 
 function addRecentCommand(text: string): void {
   if (!recentCommandsList) return;
@@ -186,7 +196,7 @@ function setupIpcListeners(): void {
   });
 
   window.syntra.onLog((entry: { level: string; message: string; context?: string }) => {
-    addLog(entry.level, entry.message, entry.context);
+    addLog(entry.level as any, entry.message, entry.context);
   });
 
   window.syntra.onDependencyStatus((depStatus: { ollama: boolean; whisper: boolean }) => {
@@ -307,11 +317,31 @@ function setupControls(): void {
   document.getElementById('btn-maximize')?.addEventListener('click', () => window.syntra?.maximize());
   document.getElementById('btn-close')?.addEventListener('click', () => window.syntra?.close());
 
-  document.getElementById('btn-setup')?.addEventListener('click', () => {
-    if (window.syntra && confirm('Deseja iniciar o instalador automático?')) {
-      window.syntra.runSetup();
+    document.getElementById('btn-setup')?.addEventListener('click', () => {
+      if (window.syntra && confirm('Deseja iniciar o instalador automático?')) {
+        window.syntra.runSetup();
+      }
+    });
+
+    // Synapse Access Modal Trigger (Restored)
+    const synapseBtn = document.getElementById('synapse-access-btn');
+    const synapseModal = document.getElementById('synapse-modal');
+    const synapseClose = document.getElementById('synapse-close');
+
+    if (synapseBtn && synapseModal && synapseClose) {
+        synapseBtn.addEventListener('click', () => {
+            addLog('info', 'Solicitando acesso ao Synapse Cluster...', 'UI');
+            synapseModal.classList.remove('hidden');
+            addLog('success', 'Synapse Modal aberto.', 'UI');
+        });
+        synapseClose.addEventListener('click', () => {
+            synapseModal.classList.add('hidden');
+            addLog('info', 'Conexão Synapse encerrada.', 'UI');
+        });
+    } else {
+        if (!synapseBtn) addLog('error', 'Botão synapse-access-btn não encontrado no DOM!', 'System');
+        if (!synapseModal) addLog('error', 'Modal synapse-modal não encontrado no DOM!', 'System');
     }
-  });
 }
 
 // ---- Bootstrap ----

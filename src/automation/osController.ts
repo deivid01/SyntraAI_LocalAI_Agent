@@ -5,6 +5,14 @@ import * as os from 'os';
 import logger from '../core/logger';
 import { ParsedIntent } from '../core/intentParser';
 import { ExecutionResult } from '../core/types';
+import windowManager from './windowManager';
+import mouseController from './mouseController';
+import keyboardController from './keyboardController';
+import sequenceRunner, { AutomationStep } from './sequenceRunner';
+import { Key } from '@nut-tree-fork/nut-js';
+import { visionEngine } from './visionEngine';
+import { automationAgent } from './automationAgent';
+import { ragIngestionEngine } from '../ai/ragIngestionEngine';
 
 const execAsync = promisify(exec);
 
@@ -53,6 +61,13 @@ export const osHandlers = {
     const executable = resolveApp(appName);
     let result = await safeExec(`start "" "${executable}"`);
     if (!result.success) result = await safeExec(`start "" "${appName}"`);
+
+    // Tentar focar a janela após abrir
+    if (result.success) {
+      setTimeout(async () => {
+        await windowManager.waitForWindow(appName, 15000);
+      }, 2000);
+    }
     return result;
   },
 
@@ -60,6 +75,79 @@ export const osHandlers = {
     const appName = (intent.params['app'] as string) ?? '';
     const executable = resolveApp(appName).replace('.exe', '');
     return await safeExec(`taskkill /IM "${executable}.exe" /F`);
+  },
+
+  async focus_window(intent: ParsedIntent): Promise<ExecutionResult> {
+    const title = (intent.params['title'] as string) ?? '';
+    const success = await windowManager.focusWindow(title);
+    return { success, output: success ? `Janela "${title}" focada.` : `Janela "${title}" não encontrada.` };
+  },
+
+  async mouse_move(intent: ParsedIntent): Promise<ExecutionResult> {
+    const x = intent.params['x'] as number;
+    const y = intent.params['y'] as number;
+    const success = await mouseController.move(x, y);
+    return { success };
+  },
+
+  async mouse_click(intent: ParsedIntent): Promise<ExecutionResult> {
+    const button = (intent.params['button'] as 'left' | 'right' | 'middle') ?? 'left';
+    const success = await mouseController.click(button);
+    return { success };
+  },
+
+  async mouse_double_click(): Promise<ExecutionResult> {
+    const success = await mouseController.doubleClick();
+    return { success };
+  },
+
+  async keyboard_type(intent: ParsedIntent): Promise<ExecutionResult> {
+    const text = (intent.params['text'] as string) ?? '';
+    const success = await keyboardController.typeText(text);
+    return { success };
+  },
+
+  async keyboard_shortcut(intent: ParsedIntent): Promise<ExecutionResult> {
+    const mod = intent.params['modifier'] as keyof typeof Key;
+    const key = intent.params['key'] as keyof typeof Key;
+    const success = await keyboardController.shortcut(Key[mod], Key[key]);
+    return { success };
+  },
+
+  async keyboard_enter(): Promise<ExecutionResult> {
+    const success = await keyboardController.pressEnter();
+    return { success };
+  },
+
+  async automation_sequence(intent: ParsedIntent): Promise<ExecutionResult> {
+    const steps = (intent.params['steps'] as AutomationStep[]) ?? [];
+    if (steps.length === 0) return { success: false, error: 'Nenhum passo na sequência.' };
+    
+    const appName = (intent.params['app'] as string) || 'unknown';
+    const success = await automationAgent.executeAdaptive(steps, appName, 'custom_sequence');
+    return { success, output: success ? 'Sequência executada com sucesso.' : 'Falha na execução adaptativa.' };
+  },
+
+  async vision_click_text(intent: ParsedIntent): Promise<ExecutionResult> {
+    const text = intent.params['text'] as string;
+    const confidence = intent.params['confidence'] as number | undefined;
+    const success = await visionEngine.findAndClick({ text, confidence });
+    return { success };
+  },
+
+  async vision_click_template(intent: ParsedIntent): Promise<ExecutionResult> {
+    const template = intent.params['template'] as string;
+    const confidence = intent.params['confidence'] as number | undefined;
+    const success = await visionEngine.findAndClick({ template, confidence });
+    return { success };
+  },
+
+  async rag_ingest(intent: ParsedIntent): Promise<ExecutionResult> {
+    const type = intent.params['type'] as 'github' | 'web' | 'pdf';
+    const source = intent.params['source'] as string;
+    const options = intent.params['options'] || {};
+    const jobId = await ragIngestionEngine.ingestSource(type, source, options);
+    return { success: true, output: `Processo de ingestão iniciado. Job ID: ${jobId}` };
   },
 
   async run_command(intent: ParsedIntent): Promise<ExecutionResult> {

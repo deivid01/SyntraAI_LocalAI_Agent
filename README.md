@@ -1,4 +1,4 @@
-# ◈ Syntra AI — Local Intelligence System
+# ◈ Syntra AI v2.0 — Local Intelligence System
 
 <div align="center">
   <img src="/assets/syntra_logo.png" alt="Syntra AI Logo" width="160" style="margin-bottom: 20px;">
@@ -196,12 +196,23 @@ SyntraAI.exe
 
 ---
 
-## 🔮 Future Improvements
+---
 
-* Voice assistant integration
-* Plugin system
-* Cloud sync (optional)
-* Multi-user profiles
+## 📝 Changelog v2.0
+
+### 🚀 New Features
+* **Autopilot Learning**: Recursive knowledge expansion system.
+* **Intelligent Fallback**: Automatic query splitting and keyword retry logic.
+* **Search-First Wikipedia**: Robust page title discovery for 100% success rate on summaries.
+* **StackOverflow Advanced**: Deeper integration with code bodies and top answers.
+* **RAG Ingestion Queue**: Unified background processing for all source types.
+* **Real-time Progress**: Visual ingestion bars and granular activity status.
+* **Extended File Support**: Local ingestion of `.ts`, `.js`, `.py`, `.md` and more.
+
+### 🛠️ Improvements
+* Fixed `SyntraAI.exe` build process.
+* Optimized embedding generation concurrency.
+* Advanced telemetry console with API logging.
 
 ---
 
@@ -250,13 +261,17 @@ npm start
 
 ---
 
-## 🤖 Primeira Execução
+---
 
-Na primeira vez, o sistema irá:
+## 📝 Registro de Alterações (Changelog) v2.0
 
-* Verificar o Ollama
-* Baixar os modelos necessários
-* Preparar o ambiente automaticamente
+* **Autopilot Learning**: Expansão recursiva de conhecimento.
+* **Fallback Inteligente**: Divisão automática de termos para buscas sem erro.
+* **Wikipedia Robusta**: Estratégia Search-First para eliminar erros 404.
+* **StackOverflow Avançado**: Captura profunda de respostas e códigos.
+* **Fila de Ingestão RAG**: Processamento em segundo plano para todos os arquivos.
+* **Progresso em Tempo Real**: Barras de status e telemetria granular na UI.
+* **Suporte a Código Local**: Ingestão de arquivos `.ts`, `.py`, `.js` e mais.
 
 ---
 

@@ -23,11 +23,11 @@ class FastPathRouter {
       handler: (m) => ({ intent: 'open_url', params: { url: m[2].trim() }, raw: 'fast-path' })
     },
     {
-      pattern: /^(abrir|abra|iniciar|inicie)\s+(chrome|notepad|bloco de notas|calculadora|discord|spotify|vscode)(.*)$/i,
+      pattern: /^(abrir|abra|iniciar|inicie)\s+(chrome|notepad|bloco de notas|calculadora|discord|spotify|vscode)\s*$/i,
       handler: (m) => ({ intent: 'open_app', params: { app: m[2].trim() }, raw: 'fast-path' })
     },
     {
-      pattern: /^(fechar|feche|encerrar|encerre)\s+(chrome|notepad|bloco de notas|calculadora|discord|spotify|vscode)(.*)$/i,
+      pattern: /^(fechar|feche|encerrar|encerre)\s+(chrome|notepad|bloco de notas|calculadora|discord|spotify|vscode)\s*$/i,
       handler: (m) => ({ intent: 'close_app', params: { app: m[2].trim() }, raw: 'fast-path' })
     },
     {

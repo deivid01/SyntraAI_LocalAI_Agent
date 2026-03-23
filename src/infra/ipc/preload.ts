@@ -24,7 +24,19 @@ contextBridge.exposeInMainWorld('syntra', {
   synapseGetFiles: () => ipcRenderer.invoke('synapse-get-files'),
   synapseGetLogs: () => ipcRenderer.invoke('synapse-get-logs'),
   synapseToggleTraining: (active: boolean) => ipcRenderer.invoke('synapse-toggle-training', active),
+  synapseIngestSource: (type: string, source: string, options?: any) => ipcRenderer.invoke('synapse-ingest-source', type, source, options),
   synapseUploadFile: (filePath: string, originalName: string) => ipcRenderer.invoke('synapse-upload-file', filePath, originalName),
+  synapseGetJobs: () => ipcRenderer.invoke('synapse-get-jobs'),
+  synapseCancelJob: (id: string) => ipcRenderer.invoke('synapse-cancel-job', id),
+  synapseDeleteFile: (id: string) => ipcRenderer.invoke('synapse-delete-file', id),
+  synapseSearch: (query: string) => ipcRenderer.invoke('synapse-search', query),
+  synapseGetChunks: (fileId: string) => ipcRenderer.invoke('synapse-get-chunks', fileId),
+  synapseGetSources: () => ipcRenderer.invoke('synapse-get-sources'),
+  synapseAddSource: (source: any) => ipcRenderer.invoke('synapse-add-source', source),
+  synapseRemoveSource: (id: string) => ipcRenderer.invoke('synapse-remove-source', id),
+  synapseStartMission: (type: string, query: string, name: string, config?: any) => ipcRenderer.invoke('synapse-start-mission', type, query, name, config),
+  synapseGetMissions: () => ipcRenderer.invoke('synapse-get-missions'),
+  synapseSyncAll: () => ipcRenderer.invoke('synapse-sync-all'),
 
 
   // Listen to events from main process
@@ -60,6 +72,13 @@ contextBridge.exposeInMainWorld('syntra', {
 
   onStopRecording: (callback: () => void) =>
     ipcRenderer.on('stop-recording', () => callback()),
+
+  onRagJobUpdate: (callback: (job: any) => void) =>
+    ipcRenderer.on('rag-job-update', (_event, job) => callback(job)),
+  onMissionLog: (callback: (data: any) => void) =>
+    ipcRenderer.on('mission-log', (_event, data) => callback(data)),
+  onMissionStatus: (callback: (data: any) => void) =>
+    ipcRenderer.on('mission-status', (_event, data) => callback(data)),
 });
 
 // Type declaration for renderer TypeScript
@@ -79,7 +98,19 @@ declare global {
       synapseGetFiles(): Promise<any[]>;
       synapseGetLogs(): Promise<any[]>;
       synapseToggleTraining(active: boolean): Promise<void>;
+      synapseIngestSource(type: string, source: string, options?: any): Promise<string>;
       synapseUploadFile(filePath: string, originalName: string): Promise<void>;
+      synapseGetJobs(): Promise<any[]>;
+      synapseCancelJob(id: string): Promise<void>;
+      synapseDeleteFile(id: string): Promise<void>;
+      synapseSearch(query: string): Promise<any[]>;
+      synapseGetChunks(fileId: string): Promise<any[]>;
+      synapseGetSources(): Promise<any[]>;
+      synapseAddSource(source: any): Promise<void>;
+      synapseRemoveSource(id: string): Promise<void>;
+      synapseStartMission(type: string, query: string, name: string, config?: any): Promise<string>;
+      synapseGetMissions(): Promise<any[]>;
+      synapseSyncAll(): Promise<void>;
       onStatus(cb: (status: string) => void): void;
       onStatusText(cb: (text: string) => void): void;
       onTranscript(cb: (text: string) => void): void;
@@ -91,6 +122,9 @@ declare global {
       onTtsSpeak(cb: (text: string) => void): void;
       onStartRecording(cb: () => void): void;
       onStopRecording(cb: () => void): void;
+      onRagJobUpdate(cb: (job: any) => void): void;
+      onMissionLog(cb: (data: any) => void): void;
+      onMissionStatus(cb: (data: any) => void): void;
     };
   }
 }

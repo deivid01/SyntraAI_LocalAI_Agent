@@ -44,7 +44,7 @@ async function runTests() {
 
   // 5. Test Fast-Path Router
   logger.info('TestSuite', 'Testing Fast-Path: cache & lookup');
-  const { default: fastPathRouter } = require('../core/fastPathRouter');
+  const fastPathRouter = require('../core/fastPathRouter').default;
   fastPathRouter.cacheIntent('teste rapido', { intent: 'test_success', params: {} });
   const cached = fastPathRouter.tryFastPath('teste rapido');
   console.log('Result Fast-Path:', cached?.intent === 'test_success' ? 'PASS' : 'FAIL');

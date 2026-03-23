@@ -1,14 +1,16 @@
 {
   "name": "syntra-local-ai",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Assistente pessoal Syntra - 100% local",
   "main": "dist/infra/main/main.js",
   "scripts": {
     "dev": "concurrently \"tsc -w\" \"npm run tailwind:watch\" \"electron .\"",
     "tailwind:watch": "tailwindcss -i ./src/ui/styles/tailwind.css -o ./dist/ui/styles/output.css --watch",
     "tailwind:build": "tailwindcss -i ./src/ui/styles/tailwind.css -o ./dist/ui/styles/output.css",
-    "build:ui": "powershell -Command \"if (!(Test-Path dist/ui/styles)) { New-Item -ItemType Directory -Path dist/ui/styles -Force }; Copy-Item -Path src/ui/index.html -Destination dist/ui/index.html -Force\"",
-    "build": "npm run build:ui && npm run tailwind:build && tsc && electron-builder",
+    "build:ui": "powershell -Command \"if (!(Test-Path dist/ui)) { New-Item -ItemType Directory -Path dist/ui -Force }; robocopy src/ui dist/ui /E /MT /R:3 /W:10 /XF *.ts *.tsx; if ($lastexitcode -ge 8) { exit $lastexitcode } else { exit 0 }\"",
+    "build:rag": "esbuild src/ui/rag-dashboard/index.tsx --bundle --minify --outfile=dist/ui/scripts/rag-dashboard.js --loader:.tsx=tsx --loader:.ts=ts --define:process.env.NODE_ENV=\\\"production\\\"",
+    "build:controller": "esbuild src/ui/scripts/uiController.ts --bundle --minify --outfile=dist/ui/scripts/uiController.js",
+    "build": "npm run build:ui && npm run build:rag && npm run build:controller && npm run tailwind:build && npx tsc && npx electron-builder",
     "start:ai": "ollama run llama3",
     "install:deps": "powershell -ExecutionPolicy Bypass -File install.ps1",
     "typecheck": "tsc --noEmit"
@@ -25,10 +27,13 @@
   "devDependencies": {
     "@tailwindcss/cli": "^4.2.2",
     "@types/node": "^20.11.5",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.4.27",
     "concurrently": "^8.2.2",
     "electron": "^28.2.0",
     "electron-builder": "^24.9.1",
+    "esbuild": "^0.27.4",
     "postcss": "^8.5.8",
     "tailwindcss": "^4.2.2",
     "typescript": "^5.3.3"
@@ -36,23 +41,42 @@
   "dependencies": {
     "@nut-tree-fork/nut-js": "^4.2.6",
     "axios": "^1.6.7",
+    "cheerio": "^1.2.0",
     "dotenv": "^16.4.1",
+    "framer-motion": "^12.38.0",
+    "lucide-react": "^0.577.0",
     "pdf-parse": "^2.4.5",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "sharp": "^0.34.5",
     "sql.js": "^1.10.3",
+    "tesseract.js": "^7.0.0",
     "wav": "^1.0.2"
   },
   "build": {
     "appId": "com.syntra.ai",
     "productName": "SyntraAI",
     "copyright": "Copyright (c) 2026 Deivid Peres",
+    "asar": true,
     "directories": {
-      "output": "release"
+      "output": "release/"
     },
     "win": {
       "target": [
-        "dir"
+        "nsis"
       ],
       "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "runAfterFinish": true,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico"
     },
     "files": [
       "dist/**/*",
@@ -63,7 +87,7 @@
     ],
     "extraResources": [
       ".env",
-      "install.ps1"
+      "setup_src/"
     ]
   }
 }

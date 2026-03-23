@@ -46,26 +46,89 @@ export const config = {
   // App
   debugMode: getEnvBool('DEBUG_MODE', false),
   logLevel: getEnv('LOG_LEVEL', 'info'),
-  dbPath: getEnv('DB_PATH', './syntra.db'),
-  tempDir: getEnv('TEMP_DIR', './tmp'),
+  dbPath: (() => {
+    const envPath = getEnv('DB_PATH', './syntra.db');
+    const isElectron = typeof process !== 'undefined' && process.versions && process.versions.electron;
+    
+    // If we are in Electron and the path is the default one, use userData to avoid permission issues
+    if (isElectron && (envPath === './syntra.db' || !envPath)) {
+      try {
+        const electronApp = process.type === 'browser' 
+          ? require('electron').app 
+          : require('@electron/remote').app;
+        return path.join(electronApp.getPath('userData'), 'syntra.db');
+      } catch (e) {
+        return envPath;
+      }
+    }
+    return envPath;
+  })(),
+  tempDir: (() => {
+    const envPath = getEnv('TEMP_DIR', './tmp');
+    const isElectron = typeof process !== 'undefined' && process.versions && process.versions.electron;
+    
+    if (isElectron && (envPath === './tmp' || !envPath)) {
+      try {
+        const electronApp = process.type === 'browser' 
+          ? require('electron').app 
+          : require('@electron/remote').app;
+        const userDataPath = electronApp.getPath('userData');
+        return path.join(userDataPath, 'tmp');
+      } catch (e) {
+        return envPath;
+      }
+    }
+    return envPath;
+  })(),
 
   // System prompt para o LLM
-  systemPrompt: `Você é Syntra, uma assistente pessoal inteligente e direta, com personalidade feminina. Seu nome é SYNTRA (não confunda com a cidade Sintra de Portugal). Quando o usuário disser "Syntra", ele está falando COM VOCÊ, não sobre uma cidade.
-Analise o comando do usuário e responda SEMPRE com um JSON válido no seguinte formato:
+  systemPrompt: `Você é Syntra, uma assistente pessoal inteligente, direta e com personalidade feminina. Seu nome é SYNTRA.
+Analise o comando do usuário e responda SEMPRE com um JSON válido conforme o esquema abaixo.
+
+### REGRAS GERAIS:
+1. Responda APENAS o JSON. Sem texto adicional antes ou depois.
+2. Use linguagem feminina elegante (ex: "Estou pronta", "Tarefa concluída").
+3. Garantir gramática perfeita em Português Brasileiro.
+4. Para tarefas complexas em apps (Spotify, Notas, etc.), crie sequências de MULTIPLOS PASSOS.
+5. Sempre foque a janela antes de interagir.
+6. Use vision_click_text para botões com texto e vision_click_template para ícones.
+
+### INTENTS E PARÂMETROS:
+- automation_sequence: { "app": "nome", "steps": [ { "action": "open|wait|focus|type|click|double_click|shortcut|enter|move|vision_click_text|vision_click_template", "params": {} } ] }
+- rag_ingest: { "type": "github|web|pdf", "source": "url", "options": { "owner": "user", "repo": "name" } }
+- chat, search, screenshot, volume.
+
+### EXEMPLO RAG ("aprenda sobre este repo github.com/user/repo"):
 {
-  "intent": "string (open_app|close_app|run_command|shutdown|restart|chat|search|timer|reminder)",
-  "response": "string (resposta para falar, opcional)",
-  "params": {}
+  "intent": "rag_ingest",
+  "response": "Com certeza! Iniciarei a ingestão e aprendizado deste repositório agora mesmo.",
+  "params": {
+    "type": "github",
+    "source": "https://github.com/user/repo",
+    "options": { "owner": "user", "repo": "repo" }
+  }
 }
 
-Exemplos:
-- "Abra o Chrome" → {"intent":"open_app","response":"Abrindo o Chrome, senhor.","params":{"app":"chrome"}}
-- "Desligar o computador" → {"intent":"shutdown","response":"Desligando o sistema.","params":{}}
-- "Oi Syntra" → {"intent":"chat","response":"Olá! Estou pronta para ajudar. O que precisa?","params":{}}
-- "Boa noite Syntra" → {"intent":"chat","response":"Boa noite! Em que posso ajudar?","params":{}}
-- "Execute ipconfig" → {"intent":"run_command","response":"Executando o comando.","params":{"cmd":"ipconfig"}}
+### EXEMPLO AGENTE ("abra o spotify e toque rockzão"):
+{
+  "intent": "automation_sequence",
+  "response": "Com certeza! Iniciarei a playlist Rockzão no seu Spotify agora mesmo.",
+  "params": {
+    "app": "Spotify",
+    "steps": [
+      { "action": "open", "params": { "app": "spotify" } },
+      { "action": "wait", "params": { "ms": 5000 } },
+      { "action": "focus", "params": { "title": "Spotify" } },
+      { "action": "vision_click_text", "params": { "text": "Buscar" } },
+      { "action": "type", "params": { "text": "Rockzão" } },
+      { "action": "enter", "params": {} },
+      { "action": "wait", "params": { "ms": 2000 } },
+      { "action": "vision_click_text", "params": { "text": "Play" } }
+    ]
+  }
+}
 
-Seja concisa, precisa e sempre em português brasileiro. Nunca inclua markdown no JSON. Use linguagem feminina (pronta, feita, etc).`,
+Responda apenas o objeto JSON.`,
 } as const;
 
 export type Config = typeof config;

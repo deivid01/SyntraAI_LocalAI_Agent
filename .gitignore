@@ -16,3 +16,5 @@ test_results.txt
 tsc*.txt
 typecheck_*.txt
 novo_arquivo.txt
+setup/
+setup_src/

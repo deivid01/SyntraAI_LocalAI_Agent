@@ -42,6 +42,12 @@ export class SynapseRepository extends BaseRepository<any> implements ISynapseRe
     return this.mapResult(res) as ISynapseChunk[];
   }
 
+  public async deleteFile(id: string): Promise<void> {
+    await this.query(`DELETE FROM synapse_chunks WHERE file_id = ?`, [id]);
+    await this.query(`DELETE FROM synapse_files WHERE id = ?`, [id]);
+    await this.logEvent('file_deleted', `Arquivo removido: ${id}`);
+  }
+
   public async logEvent(event: string, message: string): Promise<void> {
     await this.query(
       `INSERT INTO synapse_logs (event, message) VALUES (?, ?)`,
@@ -62,7 +68,7 @@ export class SynapseRepository extends BaseRepository<any> implements ISynapseRe
     return {
       total_files: (this.mapResult(filesRes)[0]?.count as number) || 0,
       total_chunks: (this.mapResult(chunksRes)[0]?.count as number) || 0,
-      training_active: settingRes === 'true'
+      training_active: settingRes !== 'false' // Default to true if null
     };
   }
 

@@ -57,6 +57,11 @@ async function initDb(): Promise<Database> {
         id INTEGER PRIMARY KEY AUTOINCREMENT, event TEXT NOT NULL,
         message TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
       );
+      CREATE TABLE IF NOT EXISTS synapse_sources (
+        id TEXT PRIMARY KEY, type TEXT NOT NULL, source TEXT NOT NULL,
+        options TEXT, description TEXT, last_sync TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+      );
     `);
   }
 

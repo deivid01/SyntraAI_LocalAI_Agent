@@ -1,6 +1,8 @@
-import { keyboard, mouse, Point, Button, straightTo, Key } from '@nut-tree-fork/nut-js';
+import { Key } from '@nut-tree-fork/nut-js';
 import { ParsedIntent } from '../core/intentParser';
 import { ExecutionResult } from '../core/types';
+import mouseController from './mouseController';
+import keyboardController from './keyboardController';
 
 const KEY_MAP: Record<string, Key> = {
   'ctrl': Key.LeftControl, 'alt': Key.LeftAlt, 'shift': Key.LeftShift,
@@ -15,42 +17,41 @@ export const guiHandlers = {
     const x = intent.params['x'] as number;
     const y = intent.params['y'] as number;
     if (x === undefined || y === undefined) return { success: false, error: 'X e Y obrigatórios.' };
-    await mouse.setPosition(new Point(x, y));
-    return { success: true, output: `Mouse movido para ${x}, ${y}` };
+    const success = await mouseController.move(x, y);
+    return { success, output: success ? `Mouse movido para ${x}, ${y}` : `Falha ao mover mouse.` };
   },
 
   async mouse_click(intent: ParsedIntent): Promise<ExecutionResult> {
-    const button = intent.params['button'] as string ?? 'left';
-    if (button === 'right') await mouse.rightClick();
-    else await mouse.leftClick();
-    return { success: true, output: `Mouse clicado (${button})` };
+    const button = (intent.params['button'] as 'left' | 'right' | 'middle') ?? 'left';
+    const success = await mouseController.click(button);
+    return { success, output: success ? `Mouse clicado (${button})` : `Falha ao clicar.` };
   },
 
   async mouse_double_click(): Promise<ExecutionResult> {
-    await mouse.doubleClick(Button.LEFT);
-    return { success: true, output: `Mouse duplo clique` };
+    const success = await mouseController.doubleClick();
+    return { success, output: success ? `Mouse duplo clique realizado.` : `Falha no duplo clique.` };
   },
 
   async mouse_drag(intent: ParsedIntent): Promise<ExecutionResult> {
     const x = intent.params['x'] as number;
     const y = intent.params['y'] as number;
-    if (x === undefined || y === undefined) return { success: false, error: 'X e Y obrigatórios.' };
-    await mouse.drag(straightTo(new Point(x, y)));
-    return { success: true, output: `Mouse arrastado para ${x}, ${y}` };
+    const startX = intent.params['startX'] as number ?? 0;
+    const startY = intent.params['startY'] as number ?? 0;
+    if (x === undefined || y === undefined) return { success: false, error: 'X e Y finais obrigatórios.' };
+    const success = await mouseController.drag(startX, startY, x, y);
+    return { success, output: success ? `Mouse arrastado para ${x}, ${y}` : `Falha ao arrastar.` };
   },
 
   async keyboard_type(intent: ParsedIntent): Promise<ExecutionResult> {
     const text = intent.params['text'] as string ?? '';
     if (!text) return { success: false, error: 'Nenhum texto fornecido.' };
-    keyboard.config.autoDelayMs = 10; 
-    await keyboard.type(text);
-    return { success: true, output: `Digitado: ${text}` };
+    const success = await keyboardController.typeText(text);
+    return { success, output: success ? `Digitado: ${text}` : `Falha ao digitar.` };
   },
 
   async keyboard_enter(): Promise<ExecutionResult> {
-    await keyboard.pressKey(Key.Enter);
-    await keyboard.releaseKey(Key.Enter);
-    return { success: true, output: `Enter pressionado` };
+    const success = await keyboardController.pressEnter();
+    return { success, output: success ? `Enter pressionado` : `Falha ao pressionar Enter.` };
   },
 
   async keyboard_shortcut(intent: ParsedIntent): Promise<ExecutionResult> {
@@ -59,15 +60,20 @@ export const guiHandlers = {
     const parts = keysStr.split(',').map(k => k.trim().toLowerCase());
     const keys = parts.map(p => KEY_MAP[p]).filter(k => k !== undefined);
     if (keys.length === 0) return { success: false, error: 'Teclas inválidas.' };
-    await keyboard.pressKey(...keys);
-    await keyboard.releaseKey(...keys);
-    return { success: true, output: `Atalho executado: ${keysStr}` };
+    // Se for um atalho de duas teclas, usa o método shortcut
+    let success = false;
+    if (keys.length === 2) {
+      success = await keyboardController.shortcut(keys[0], keys[1]);
+    } else {
+      success = await keyboardController.pressKey(...keys);
+    }
+    return { success, output: success ? `Atalho executado: ${keysStr}` : `Falha no atalho.` };
   },
 
   async scroll(intent: ParsedIntent): Promise<ExecutionResult> {
-    const amount = intent.params['amount'] as number ?? 100; 
-    if (amount < 0) await mouse.scrollDown(Math.abs(amount));
-    else await mouse.scrollUp(amount);
-    return { success: true, output: `Scroll realizado: ${amount}` };
+    const amount = intent.params['amount'] as number ?? 100;
+    const success = await mouseController.scroll(amount);
+    return { success, output: success ? `Scroll realizado: ${amount}` : `Falha ao realizar scroll.` };
   }
 };
+
