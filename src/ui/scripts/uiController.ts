@@ -122,9 +122,6 @@ export function addLog(level: 'info' | 'success' | 'warn' | 'error', message: st
 
 // ---- State management ----
 let currentState: 'starting' | 'idle' | 'listening' | 'processing' | 'speaking' = 'idle';
-const recentCommandsList = document.getElementById('recent-commands')!;
-const amplitudeValueEl = document.getElementById('info-amplitude')!;
-const amplitudeBarEl = document.getElementById('amplitude-bar')!;
 
 function setState(state: 'starting' | 'idle' | 'listening' | 'processing' | 'speaking'): void {
   currentState = state;
@@ -137,14 +134,8 @@ function setState(state: 'starting' | 'idle' | 'listening' | 'processing' | 'spe
 if (statusIndicator) statusIndicator.setState('starting');
 
 function addRecentCommand(text: string): void {
-  if (!recentCommandsList) return;
-  const li = document.createElement('li');
-  li.className = "text-[10px] text-zinc-500 py-1 border-b border-white/5 truncate";
-  li.textContent = text;
-  recentCommandsList.insertBefore(li, recentCommandsList.firstChild);
-  if (recentCommandsList.children.length > 5) {
-    recentCommandsList.removeChild(recentCommandsList.lastChild!);
-  }
+  // Function logic removed as the UI element is no longer present
+  console.log('[Syntra] Activity recorded:', text);
 }
 
 // ---- Web Speech TTS fallback ----
@@ -190,9 +181,6 @@ function setupIpcListeners(): void {
 
   window.syntra.onAmplitude((value: number) => {
     if (hud) hud.setAmplitude(value);
-    const pct = Math.min(100, value * 200);
-    if (amplitudeValueEl) amplitudeValueEl.textContent = value.toFixed(3);
-    if (amplitudeBarEl) (amplitudeBarEl as HTMLElement).style.width = `${pct}%`;
   });
 
   window.syntra.onLog((entry: { level: string; message: string; context?: string }) => {
