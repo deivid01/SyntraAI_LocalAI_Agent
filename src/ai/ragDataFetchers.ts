@@ -171,20 +171,20 @@ export class RagDataFetchers {
     logger.info('RagFetchers', `Fetching Wikipedia: ${query} (${lang})`);
     
     try {
-      // 1. Search for the best matching page
-      const searchUrl = `https://${lang}.wikipedia.org/api/rest_v1/search/page?q=${encodeURIComponent(query)}&limit=1`;
-      logger.info('RagFetchers', `Searching Wikipedia: ${searchUrl}`);
+      // 1. Search for the best matching page using Action API
+      const searchUrl = `https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`;
+      logger.info('RagFetchers', `Searching Wikipedia (Action API): ${searchUrl}`);
       
       const searchRes = await axios.get(searchUrl, {
         headers: { 'User-Agent': 'SyntraLocalAI/1.0' }
       });
-
-      if (!searchRes.data || !searchRes.data.pages || searchRes.data.pages.length === 0) {
+ 
+      if (!searchRes.data || !searchRes.data.query || !searchRes.data.query.search || searchRes.data.query.search.length === 0) {
         logger.warn('RagFetchers', `No Wikipedia results found for: ${query}`);
         return null;
       }
-
-      const bestMatch = searchRes.data.pages[0];
+ 
+      const bestMatch = searchRes.data.query.search[0];
       const title = bestMatch.title;
       logger.info('RagFetchers', `Best Wikipedia match found: ${title}`);
 
@@ -250,7 +250,15 @@ export class RagDataFetchers {
 
         const docs: RagDocument[] = [];
         for (const item of items.slice(0, 5)) { // Increase to top 5 for better knowledge base
-          let content = `Question: ${item.title}\n\n${item.body_markdown || item.body}\n\n`;
+          // Decode HTML entities in title
+          const decodedTitle = item.title
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>');
+
+          let content = `Question: ${decodedTitle}\n\n${item.body_markdown || item.body}\n\n`;
           
           if (item.answers) {
             content += `Top Answers:\n`;
@@ -258,13 +266,13 @@ export class RagDataFetchers {
               content += `--- Answer ---\n${answer.body_markdown || answer.body}\n\n`;
             }
           }
-
+ 
           docs.push({
             source: item.link,
             type: 'stackoverflow',
             content: content,
             metadata: { 
-              title: item.title,
+              title: decodedTitle,
               tags: item.tags,
               score: item.score
             }

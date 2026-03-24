@@ -86,6 +86,7 @@ export class SynapseMissionManager extends EventEmitter {
 
     const queryQueue: { term: string, depth: number }[] = [{ term: initialQuery, depth: 0 }];
     const seenQueries = new Set<string>([initialQuery.toLowerCase()]);
+    const seenSources = new Set<string>();
     const sources = mission.config?.sources || [];
 
     while (queryQueue.length > 0 && mission.status === 'running') {
@@ -125,8 +126,13 @@ export class SynapseMissionManager extends EventEmitter {
           }
 
           if (docs.length > 0) {
-            allDocs.push(...docs);
-            usedSources.add(source);
+            // Filter out already ingested sources in this mission
+            const newDocs = docs.filter(d => !seenSources.has(d.source));
+            if (newDocs.length > 0) {
+              allDocs.push(...newDocs);
+              newDocs.forEach(d => seenSources.add(d.source));
+              usedSources.add(source);
+            }
           }
         } catch (sourceErr: any) {
           this.addLog(missionId, `[Erro API] ${source}: ${sourceErr.message}`, 'error');
