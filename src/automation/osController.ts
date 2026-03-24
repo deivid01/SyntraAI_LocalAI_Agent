@@ -59,15 +59,26 @@ export const osHandlers = {
   async open_app(intent: ParsedIntent): Promise<ExecutionResult> {
     const appName = (intent.params['app'] as string) ?? 'notepad';
     const executable = resolveApp(appName);
+    
+    logger.info('OSController', `Tentando abrir aplicativo: ${appName} (${executable})`);
+    
+    // Tenta primeiro com executável mapeado, depois com o nome bruto
     let result = await safeExec(`start "" "${executable}"`);
-    if (!result.success) result = await safeExec(`start "" "${appName}"`);
+    if (!result.success) {
+      const fallbackCmd = appName.toLowerCase() === 'chrome' ? 'start chrome' : `start "" "${appName}"`;
+      result = await safeExec(fallbackCmd);
+    }
 
-    // Tentar focar a janela após abrir
     if (result.success) {
+      logger.info('OSController', `Aplicativo ${appName} iniciado com sucesso.`);
+      // Tentar focar a janela após abrir
       setTimeout(async () => {
         await windowManager.waitForWindow(appName, 15000);
       }, 2000);
+    } else {
+      logger.error('OSController', `Falha ao abrir ${appName}: ${result.error}`);
     }
+    
     return result;
   },
 

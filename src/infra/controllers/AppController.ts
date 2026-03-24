@@ -75,13 +75,13 @@ export class AppController {
             this.ipcController?.sendToRenderer('status-text', 'Garantindo Modelos...');
             await llmService.ensureModels(['phi3', 'llama3', 'nomic-embed-text']);
         } else {
-            this.ipcController?.sendToRenderer('log', { level: 'error', message: 'Ollama não iniciou. Verifique se ele está instalado.', context: 'System' });
+            this.ipcController?.sendToRenderer('log-entry', { level: 'error', message: 'Ollama não iniciou. Verifique se ele está instalado.', context: 'System' });
         }
 
         // 2. Check Whisper (Python)
         const whisperOk = await whisperService.checkHealth();
         if (!whisperOk) {
-            this.ipcController?.sendToRenderer('log', { level: 'warn', message: 'Whisper/Python não encontrados. Clique no ícone de engrenagem para instalar.', context: 'System' });
+            this.ipcController?.sendToRenderer('log-entry', { level: 'warn', message: 'Whisper/Python não encontrados. Clique no ícone de engrenagem para instalar.', context: 'System' });
         }
 
         await learningService.init();
@@ -227,10 +227,10 @@ export class AppController {
 
     let intent = fastPathRouter.tryFastPath(text);
     if (!intent) {
-      this.ipcController?.sendToRenderer('log', { level: 'info', message: `Processando comando: "${text}"`, context: 'LLM' });
+      this.ipcController?.sendToRenderer('log-entry', { level: 'info', message: `Processando comando: "${text}"`, context: 'LLM' });
       try {
         const { response: llmRes, model: usedModel } = await llmService.smartQuery(text);
-        this.ipcController?.sendToRenderer('log', { level: 'info', message: `Modelo usado: ${usedModel}. Resposta bruta: ${llmRes.substring(0, 100)}...`, context: 'LLM' });
+        this.ipcController?.sendToRenderer('log-entry', { level: 'info', message: `Modelo usado: ${usedModel}. Resposta bruta: ${llmRes.substring(0, 100)}...`, context: 'LLM' });
         const parsed = llmService.parseJSON(llmRes);
         intent = parseIntent(parsed || { intent: 'chat', response: llmRes }, text);
         fastPathRouter.cacheIntent(text, intent);
@@ -244,7 +244,7 @@ export class AppController {
         }
 
         intent = { intent: 'chat', response: fallbackMsg, params: {}, raw: text };
-        this.ipcController?.sendToRenderer('log', { level: 'error', message: `LLM error: ${errMsg}`, context: 'LLM' });
+        this.ipcController?.sendToRenderer('log-entry', { level: 'error', message: `LLM error: ${errMsg}`, context: 'LLM' });
       }
     }
 
