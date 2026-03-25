@@ -167,29 +167,48 @@ export class RagDataFetchers {
       return null;
     }
   }
-  public async fetchWikipedia(query: string, lang: string = 'pt'): Promise<RagDocument | null> {
+  public async fetchWikipedia(input: string, lang: string = 'pt'): Promise<RagDocument | null> {
+    let query = input;
+    let titleToFetch = '';
+
+    // Handle full Wikipedia URLs
+    if (input.includes('wikipedia.org/wiki/')) {
+        const langMatch = input.match(/https?:\/\/([^.]+)\.wikipedia\.org/);
+        const urlParts = input.split('/wiki/');
+        if (langMatch) lang = langMatch[1];
+        
+        if (urlParts.length > 1) {
+            titleToFetch = decodeURIComponent(urlParts[1].split(/[?#]/)[0]).replace(/_/g, ' ');
+            logger.info('RagFetchers', `Extracted Wikipedia title: ${titleToFetch} (lang: ${lang})`);
+        }
+    } else {
+        query = input;
+    }
+
     logger.info('RagFetchers', `Fetching Wikipedia: ${query} (${lang})`);
     
     try {
-      // 1. Search for the best matching page using Action API
-      const searchUrl = `https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`;
-      logger.info('RagFetchers', `Searching Wikipedia (Action API): ${searchUrl}`);
-      
-      const searchRes = await axios.get(searchUrl, {
-        headers: { 'User-Agent': 'SyntraLocalAI/1.0' }
-      });
- 
-      if (!searchRes.data || !searchRes.data.query || !searchRes.data.query.search || searchRes.data.query.search.length === 0) {
-        logger.warn('RagFetchers', `No Wikipedia results found for: ${query}`);
-        return null;
+      if (!titleToFetch) {
+        // 1. Search for the best matching page using Action API
+        const searchUrl = `https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`;
+        logger.info('RagFetchers', `Searching Wikipedia (Action API): ${searchUrl}`);
+        
+        const searchRes = await axios.get(searchUrl, {
+          headers: { 'User-Agent': 'SyntraLocalAI/1.0' }
+        });
+  
+        if (!searchRes.data || !searchRes.data.query || !searchRes.data.query.search || searchRes.data.query.search.length === 0) {
+          logger.warn('RagFetchers', `No Wikipedia results found for: ${query}`);
+          return null;
+        }
+  
+        const bestMatch = searchRes.data.query.search[0];
+        titleToFetch = bestMatch.title;
+        logger.info('RagFetchers', `Best Wikipedia match found: ${titleToFetch}`);
       }
- 
-      const bestMatch = searchRes.data.query.search[0];
-      const title = bestMatch.title;
-      logger.info('RagFetchers', `Best Wikipedia match found: ${title}`);
 
-      // 2. Fetch the summary for the best match
-      const summaryUrl = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
+      // 2. Fetch the summary for the specific title
+      const summaryUrl = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(titleToFetch.replace(/\s/g, '_'))}`;
       logger.info('RagFetchers', `Fetching Wikipedia summary: ${summaryUrl}`);
       
       const response = await axios.get(summaryUrl, {

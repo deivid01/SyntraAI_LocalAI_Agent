@@ -65,7 +65,9 @@ export const osHandlers = {
     // Tenta primeiro com executável mapeado, depois com o nome bruto
     let result = await safeExec(`start "" "${executable}"`);
     if (!result.success) {
-      const fallbackCmd = appName.toLowerCase() === 'chrome' ? 'start chrome' : `start "" "${appName}"`;
+      let fallbackCmd = `start "" "${appName}"`;
+      if (appName.toLowerCase() === 'chrome') fallbackCmd = 'start chrome';
+      if (appName.toLowerCase() === 'spotify') fallbackCmd = 'start spotify';
       result = await safeExec(fallbackCmd);
     }
 

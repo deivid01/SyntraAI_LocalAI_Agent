@@ -10,14 +10,16 @@ import { ragIngestionEngine } from '../../ai/ragIngestionEngine';
 import { SynapseRepository } from '../../database/repositories/SynapseRepository';
 import { synapseMissionManager } from '../../ai/SynapseMissionManager';
 
-import { appController } from './AppController';
+// import { appController } from './AppController';
 
 export class IpcController {
   private window: BrowserWindow;
+  private controller: any; // Type 'any' to avoid recursive import, or use an interface
   private synapseRepo = new SynapseRepository();
 
-  constructor(window: BrowserWindow) {
+  constructor(window: BrowserWindow, controller: any) {
     this.window = window;
+    this.controller = controller;
     this.setupEventListeners();
   }
 
@@ -41,7 +43,10 @@ export class IpcController {
 
     // Manual text input
     ipcMain.on('send-text', async (_event, text: string) => {
-      await appController.processCommand(text);
+      console.log(`[IpcController] Received send-text: "${text}"`);
+      if (this.controller) {
+        await this.controller.processCommand(text);
+      }
     });
 
     // Memory / History

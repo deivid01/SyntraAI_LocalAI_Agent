@@ -47,7 +47,7 @@ export class AppController {
     this.spawnOllama();
     
     if (this.mainWindow) {
-      this.ipcController = new IpcController(this.mainWindow);
+      this.ipcController = new IpcController(this.mainWindow, this);
       this.ipcController.setupHandlers();
       
       setIpcSender((channel, ...args) => this.ipcController?.sendToRenderer(channel, ...args));
@@ -94,6 +94,7 @@ export class AppController {
         await this.checkDependencies();
         this.updateState('idle');
         this.ipcController?.sendToRenderer('status-text', 'SyntraAI Online');
+        this.ipcController?.sendToRenderer('log-entry', { level: 'success', message: 'Frequência Neural Estabilizada. IPC conectado.', context: 'Core' });
         logger.info('AppController', 'SyntraAI inicializado com sucesso!');
     }, 1500);
   }

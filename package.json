@@ -1,6 +1,6 @@
 {
   "name": "syntra-local-ai",
-  "version": "2.0.0",
+  "version": "2.1.1",
   "description": "Assistente pessoal Syntra - 100% local",
   "main": "dist/infra/main/main.js",
   "scripts": {
